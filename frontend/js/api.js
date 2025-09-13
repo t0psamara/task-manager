@@ -304,9 +304,7 @@ window.ApiUtils = {
             position_x: parseFloat(formData.position_x) || 0,
             position_y: parseFloat(formData.position_y) || 0,
             enabler_title: formData.enabler_title || '',
-            enabler_active: formData.enabler_active || false,
-            link_url: formData.link_url || '',
-            link_title: formData.link_title || ''
+            enabler_active: true // Всегда активен
         };
     },
 

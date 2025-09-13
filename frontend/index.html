@@ -166,27 +166,17 @@
                                 <h4>Ссылки:</h4>
                                 <div class="link-config">
                                     <div class="form-group">
-                                        <label for="mgmtTitle">Название ссылки МГМТ:</label>
-                                        <input type="text" id="mgmtTitle" name="mgmt_title" 
-                                               maxlength="100" placeholder="МГМТ" value="МГМТ">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="mgmtLink">URL МГМТ:</label>
+                                        <label for="mgmtLink">URL МГМТ (название извлекается автоматически):</label>
                                         <input type="url" id="mgmtLink" name="mgmt_link" 
-                                               maxlength="500" placeholder="https://mgmt.example.com/feature/123">
+                                               maxlength="500" placeholder="https://mgmt.example.com/feature/AUTH-123">
                                     </div>
                                 </div>
                                 
                                 <div class="link-config">
                                     <div class="form-group">
-                                        <label for="epicTitle">Название ссылки Эпик:</label>
-                                        <input type="text" id="epicTitle" name="epic_title" 
-                                               maxlength="100" placeholder="Эпик" value="Эпик">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="epicLink">URL Эпик:</label>
+                                        <label for="epicLink">URL Эпик (название извлекается автоматически):</label>
                                         <input type="url" id="epicLink" name="epic_link" 
-                                               maxlength="500" placeholder="https://epic.example.com/epic/456">
+                                               maxlength="500" placeholder="https://jira.example.com/epic/AUTH-456">
                                     </div>
                                 </div>
                             </div>
@@ -383,30 +373,9 @@
                         <div class="enabler-section">
                             <h4>Энейблер:</h4>
                             <div class="form-group">
-                                <label for="enablerTitle">Заголовок энейблера:</label>
+                                <label for="enablerTitle">Заголовок энейблера (оставьте пустым чтобы убрать):</label>
                                 <input type="text" id="enablerTitle" name="enabler_title" 
                                        maxlength="100" placeholder="Например: БЛОКЕР или РИСК">
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="enablerActive" name="enabler_active">
-                                    Энейблер активен
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Ссылка -->
-                        <div class="link-section">
-                            <h4>Ссылка:</h4>
-                            <div class="form-group">
-                                <label for="linkTitle">Название ссылки:</label>
-                                <input type="text" id="linkTitle" name="link_title" 
-                                       maxlength="100" placeholder="Например: Техническое задание">
-                            </div>
-                            <div class="form-group">
-                                <label for="linkUrl">URL ссылки:</label>
-                                <input type="url" id="linkUrl" name="link_url" 
-                                       maxlength="500" placeholder="https://docs.example.com/task/123">
                             </div>
                         </div>
 

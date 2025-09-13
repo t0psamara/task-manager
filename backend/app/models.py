@@ -90,9 +90,7 @@ class Task(Base):
     
     # Дополнительные поля
     enabler_title = Column(String(100), default="")  # Заголовок энейблера
-    enabler_active = Column(Boolean, default=False)  # Активен ли энейблер
-    link_url = Column(Text, default="")  # Ссылка на внешний ресурс
-    link_title = Column(String(100), default="")  # Название ссылки
+    enabler_active = Column(Boolean, default=True)  # Всегда активен
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

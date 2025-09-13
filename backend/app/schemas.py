@@ -14,9 +14,7 @@ class TaskBase(BaseModel):
     position_y: float = Field(default=0.0)
     color: str = Field(default="#ffeb3b", pattern=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     enabler_title: str = Field(default="", max_length=100)
-    enabler_active: bool = Field(default=False)
-    link_url: str = Field(default="", max_length=500)
-    link_title: str = Field(default="", max_length=100)
+    enabler_active: bool = Field(default=True)  # Всегда активен
 
 
 class TaskCreate(TaskBase):
@@ -36,9 +34,7 @@ class TaskUpdate(BaseModel):
     sprint_id: Optional[int] = None
     feature_id: Optional[int] = None
     enabler_title: Optional[str] = Field(None, max_length=100)
-    enabler_active: Optional[bool] = None
-    link_url: Optional[str] = Field(None, max_length=500)
-    link_title: Optional[str] = Field(None, max_length=100)
+    enabler_active: Optional[bool] = Field(default=True)  # Всегда активен
 
 
 class Task(TaskBase):

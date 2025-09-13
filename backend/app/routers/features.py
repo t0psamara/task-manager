@@ -100,27 +100,55 @@ async def get_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
     return feature
 
 
-@router.put("/{feature_id}", response_model=schemas.Feature)
+@router.put("/{feature_id}")
 async def update_feature(
     feature_id: int,
-    feature_update: schemas.FeatureUpdate,
+    feature_data: dict,
     db: AsyncSession = Depends(get_db)
 ):
     """Обновление фичи"""
-    result = await db.execute(
-        select(models.Feature).where(models.Feature.id == feature_id)
-    )
-    db_feature = result.scalar_one_or_none()
-    if not db_feature:
-        raise HTTPException(status_code=404, detail="Фича не найдена")
-    
-    update_data = feature_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_feature, field, value)
-    
-    await db.flush()
-    await db.refresh(db_feature)
-    return db_feature
+    try:
+        result = await db.execute(
+            select(models.Feature).where(models.Feature.id == feature_id)
+        )
+        db_feature = result.scalar_one_or_none()
+        if not db_feature:
+            raise HTTPException(status_code=404, detail="Фича не найдена")
+        
+        # Обновляем поля фичи
+        if 'name' in feature_data:
+            db_feature.name = feature_data['name']
+        if 'order' in feature_data:
+            db_feature.order = int(feature_data['order'])
+        if 'mgmt_link' in feature_data:
+            db_feature.mgmt_link = feature_data['mgmt_link']
+        if 'mgmt_title' in feature_data:
+            db_feature.mgmt_title = feature_data['mgmt_title']
+        if 'epic_link' in feature_data:
+            db_feature.epic_link = feature_data['epic_link']
+        if 'epic_title' in feature_data:
+            db_feature.epic_title = feature_data['epic_title']
+        if 'project_code' in feature_data:
+            db_feature.project_code = feature_data['project_code']
+        
+        await db.flush()
+        await db.refresh(db_feature)
+        
+        return {
+            "id": db_feature.id,
+            "board_id": db_feature.board_id,
+            "name": db_feature.name,
+            "order": db_feature.order,
+            "mgmt_link": db_feature.mgmt_link or "",
+            "mgmt_title": db_feature.mgmt_title or "МГМТ",
+            "epic_link": db_feature.epic_link or "",
+            "epic_title": db_feature.epic_title or "Эпик",
+            "project_code": db_feature.project_code or ""
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{feature_id}")

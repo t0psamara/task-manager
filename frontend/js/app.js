@@ -342,12 +342,20 @@ class FormModalManager {
 
         try {
             const featureId = window.FeatureEditModal.currentFeature.id;
+            
+            // Автоматически извлекаем названия из URL после последнего слеша
+            const mgmtLink = formData.get('mgmt_link') || '';
+            const epicLink = formData.get('epic_link') || '';
+            
+            const mgmtTitle = mgmtLink ? mgmtLink.split('/').pop() || 'МГМТ' : 'МГМТ';
+            const epicTitle = epicLink ? epicLink.split('/').pop() || 'Эпик' : 'Эпик';
+            
             const featureData = {
                 name: formData.get('name')?.trim(),
-                mgmt_title: formData.get('mgmt_title') || 'МГМТ',
-                mgmt_link: formData.get('mgmt_link') || '',
-                epic_title: formData.get('epic_title') || 'Эпик',
-                epic_link: formData.get('epic_link') || '',
+                mgmt_title: mgmtTitle,
+                mgmt_link: mgmtLink,
+                epic_title: epicTitle,
+                epic_link: epicLink,
                 project_code: formData.get('project_code') || ''
             };
 
@@ -356,12 +364,15 @@ class FormModalManager {
                 return;
             }
 
+            console.log('Updating feature with data:', featureData);
             const updatedFeature = await window.api.updateFeature(featureId, featureData);
+            console.log('Feature updated successfully:', updatedFeature);
             
             // Обновляем фичу в локальных данных
             const featureIndex = window.boardManager.features.findIndex(f => f.id === featureId);
             if (featureIndex > -1) {
                 window.boardManager.features[featureIndex] = updatedFeature;
+                console.log('Feature updated in local data');
             }
             
             // Перерисовываем доску
@@ -388,9 +399,7 @@ class FormModalManager {
                 estimate_sa: formData.get('estimate_sa'),
                 color: formData.get('color'),
                 enabler_title: formData.get('enabler_title'),
-                enabler_active: formData.get('enabler_active') === 'on',
-                link_url: formData.get('link_url'),
-                link_title: formData.get('link_title')
+                enabler_active: true // Всегда активен
             });
 
             if (!taskData.name?.trim()) {
@@ -507,9 +516,7 @@ class TaskModal {
             'estimateQa': task.estimate_qa,
             'estimateSa': task.estimate_sa,
             'taskColor': task.color || '#ffeb3b',
-            'enablerTitle': task.enabler_title || '',
-            'linkTitle': task.link_title || '',
-            'linkUrl': task.link_url || ''
+            'enablerTitle': task.enabler_title || ''
         };
 
         Object.entries(fields).forEach(([fieldId, value]) => {
@@ -523,11 +530,7 @@ class TaskModal {
             }
         });
 
-        // Устанавливаем checkbox энейблера
-        const enablerActive = document.getElementById('enablerActive');
-        if (enablerActive) {
-            enablerActive.checked = task.enabler_active || false;
-        }
+        // Убрали checkbox энейблера - всегда активен
 
         // Устанавливаем активный цветовой пресет
         const colorPresets = document.querySelectorAll('.color-preset');
@@ -670,9 +673,7 @@ class FeatureEditModal {
     populateForm(feature) {
         const fields = {
             'editFeatureName': feature.name || '',
-            'mgmtTitle': feature.mgmt_title || 'МГМТ',
             'mgmtLink': feature.mgmt_link || '',
-            'epicTitle': feature.epic_title || 'Эпик',
             'epicLink': feature.epic_link || '',
             'projectCode': feature.project_code || ''
         };

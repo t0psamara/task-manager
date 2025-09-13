@@ -236,7 +236,7 @@ class BoardManager {
         
         // Синхронизируем количество колонок с количеством спринтов
         const sprintCount = this.sprints.length;
-        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, 1fr))`;
+        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, max-content))`; // max-content для автоширины
         this.sprintHeaders.style.gridTemplateColumns = gridColumns;
         
         this.sprints.forEach(sprint => {
@@ -346,7 +346,7 @@ class BoardManager {
 
         // Синхронизируем количество колонок с заголовками спринтов
         const sprintCount = this.sprints.length;
-        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, 1fr))`;
+        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, max-content))`; // max-content для автоширины
 
         this.features.forEach(feature => {
             const featureRow = document.createElement('div');
@@ -433,19 +433,16 @@ class BoardManager {
             `<div class="estimate" data-team="${est.team}">${est.value}</div>`
         ).join('');
 
-        // Создаем HTML для энейблера если он есть
+        // Создаем HTML для энейблера если он есть (всегда активен)
         const enablerHtml = task.enabler_title ? 
-            `<div class="task-enabler ${task.enabler_active ? 'active' : 'inactive'}">${task.enabler_title}</div>` : '';
+            `<div class="task-enabler active">${task.enabler_title}</div>` : '';
 
-        // Создаем HTML для ссылки если она есть
-        const linkHtml = task.link_url ? 
-            `<a href="${task.link_url}" class="task-link" target="_blank" rel="noopener">${task.link_title || 'ссылка'}</a>` : '';
+        // Убрали ссылки из тикетов
 
         taskCard.innerHTML = `
             ${enablerHtml}
             <div class="task-name">${task.name}</div>
             <div class="task-estimates">${estimatesHtml}</div>
-            ${linkHtml}
         `;
 
         // Обработчик двойного клика для редактирования
