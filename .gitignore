@@ -1,0 +1,107 @@
+# Секреты и конфиденциальная информация
+.env
+.env.local
+.env.production
+.env.staging
+*.key
+*.pem
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Виртуальное окружение
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+venv.bak/
+
+# База данных для разработки
+task_manager_debug.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+*.log
+logs/
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Alembic (миграции)
+alembic/versions/*.py
+!alembic/versions/
+
+# Временные файлы
+*.tmp
+*.temp
+.cache/
+
+# Docker
+.dockerignore
+
+# Node.js (если будут использоваться)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

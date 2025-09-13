@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Доска планирования</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Заголовок и панель управления -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">📋 Task Manager</h1>
+                <div class="header-controls">
+                    <select id="boardSelect" class="board-selector">
+                        <option value="">Выберите доску...</option>
+                    </select>
+                    <button id="createBoard" class="btn btn-primary">+ Создать доску</button>
+                    <button id="addFeature" class="btn btn-secondary">+ Добавить фичу</button>
+                </div>
+            </div>
+            
+            <!-- Индикаторы подключения -->
+            <div class="connection-status">
+                <span id="apiStatus" class="status-indicator">API: ⚫</span>
+                <span id="wsStatus" class="status-indicator">WebSocket: ⚫</span>
+                <span id="activeUsers" class="active-users">👥 1</span>
+            </div>
+        </header>
+
+        <!-- Загрузка -->
+        <div id="loadingSpinner" class="loading-container">
+            <div class="spinner"></div>
+            <p>Загружаем данные...</p>
+        </div>
+
+        <!-- Основная рабочая область -->
+        <main id="mainContent" class="main-content" style="display: none;">
+            <!-- Панель действий -->
+            <div class="action-panel">
+                <div class="capacity-legend">
+                    <div class="legend-item">
+                        <span class="legend-color available"></span>
+                        <span>Есть емкость</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color full"></span>
+                        <span>Полная загрузка</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color overload"></span>
+                        <span>Перегрузка</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="undoBtn" class="btn btn-icon" title="Отменить (Ctrl+Z)" disabled>
+                        ↶
+                    </button>
+                    <button id="redoBtn" class="btn btn-icon" title="Повторить (Ctrl+Y)" disabled>
+                        ↷
+                    </button>
+                    <button id="exportBtn" class="btn btn-outline">📤 Экспорт</button>
+                    <button id="refreshBtn" class="btn btn-outline">🔄 Обновить</button>
+                </div>
+            </div>
+
+            <!-- Контейнер планирования -->
+            <div class="planning-container">
+                <div class="planning-wrapper">
+                    <!-- Заголовки спринтов -->
+                    <div class="sprint-headers">
+                        <div class="feature-header">Фичи</div>
+                        <!-- Спринты будут добавлены динамически -->
+                    </div>
+
+                    <!-- Таблица планирования -->
+                    <div id="planningBoard" class="planning-board">
+                        <!-- Строки с фичами и задачами будут добавлены динамически -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backlog -->
+            <div class="backlog-section">
+                <h3>📦 Backlog - Неназначенные задачи</h3>
+                <div id="backlogTasks" class="backlog-tasks">
+                    <!-- Задачи backlog будут добавлены динамически -->
+                </div>
+                <button id="addTaskToBacklog" class="btn btn-dashed">+ Добавить задачу в backlog</button>
+            </div>
+        </main>
+
+        <!-- Модальные окна -->
+        
+        <!-- Модальное окно создания доски -->
+        <div id="boardModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Создать доску</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="boardForm">
+                        <div class="form-group">
+                            <label for="boardName">Название доски:</label>
+                            <input type="text" id="boardName" name="name" required
+                                   placeholder="Например: Sprint Planning Q1 2024">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Создать доску</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно создания фичи -->
+        <div id="featureModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Добавить фичу</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="featureForm">
+                        <div class="form-group">
+                            <label for="featureName">Название фичи:</label>
+                            <input type="text" id="featureName" name="name" required
+                                   placeholder="Например: Авторизация пользователей">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Добавить фичу</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно редактирования спринта -->
+        <div id="sprintEditModal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3 id="sprintEditTitle">Редактировать спринт</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="sprintEditForm">
+                        <div class="sprint-edit-grid">
+                            <!-- Емкости команд -->
+                            <div class="capacity-section">
+                                <h4>Емкость команд:</h4>
+                                <div class="capacity-grid">
+                                    <div class="form-group">
+                                        <label for="editCapacityIos">iOS разработка:</label>
+                                        <input type="number" id="editCapacityIos" name="capacity_ios" 
+                                               min="0" step="0.5" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editCapacityAndroid">Android разработка:</label>
+                                        <input type="number" id="editCapacityAndroid" name="capacity_android" 
+                                               min="0" step="0.5" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editCapacityQa">QA тестирование:</label>
+                                        <input type="number" id="editCapacityQa" name="capacity_qa" 
+                                               min="0" step="0.5" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editCapacitySa">Системный анализ:</label>
+                                        <input type="number" id="editCapacitySa" name="capacity_sa" 
+                                               min="0" step="0.5" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Описание -->
+                            <div class="description-section">
+                                <h4>Описание спринта:</h4>
+                                <div class="form-group">
+                                    <label for="sprintDescription">Текст под названием спринта:</label>
+                                    <input type="text" id="sprintDescription" name="description" 
+                                           maxlength="255" placeholder="Например: Релиз мобильного приложения">
+                                </div>
+                            </div>
+
+                            <!-- Бейджи -->
+                            <div class="badges-section">
+                                <h4>Бейджи спринта:</h4>
+                                
+                                <!-- Первый бейдж -->
+                                <div class="badge-config">
+                                    <h5>Бейдж 1:</h5>
+                                    <div class="badge-form-row">
+                                        <div class="form-group">
+                                            <label for="badge1Text">Текст:</label>
+                                            <input type="text" id="badge1Text" name="badge1_text" 
+                                                   maxlength="50" placeholder="MVP">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="badge1Color">Цвет:</label>
+                                            <select id="badge1Color" name="badge1_color">
+                                                <option value="blue">🔵 Синий</option>
+                                                <option value="red">🔴 Красный</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="badge1Tooltip">Подсказка (при наведении):</label>
+                                        <textarea id="badge1Tooltip" name="badge1_tooltip" 
+                                                  maxlength="500" rows="3" 
+                                                  placeholder="Первая строка подсказки&#10;Вторая строка подсказки&#10;Третья строка подсказки"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Второй бейдж -->
+                                <div class="badge-config">
+                                    <h5>Бейдж 2:</h5>
+                                    <div class="badge-form-row">
+                                        <div class="form-group">
+                                            <label for="badge2Text">Текст:</label>
+                                            <input type="text" id="badge2Text" name="badge2_text" 
+                                                   maxlength="50" placeholder="HOT">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="badge2Color">Цвет:</label>
+                                            <select id="badge2Color" name="badge2_color">
+                                                <option value="blue">🔵 Синий</option>
+                                                <option value="red">🔴 Красный</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="badge2Tooltip">Подсказка (при наведении):</label>
+                                        <textarea id="badge2Tooltip" name="badge2_tooltip" 
+                                                  maxlength="500" rows="3" 
+                                                  placeholder="Первая строка подсказки&#10;Вторая строка подсказки&#10;Третья строка подсказки"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно создания/редактирования задачи -->
+        <div id="taskModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="taskModalTitle">Добавить задачу</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskName">Название задачи:</label>
+                            <input type="text" id="taskName" name="name" required
+                                   placeholder="Например: Реализовать авторизацию через OAuth">
+                        </div>
+                        
+                        <div class="estimates-section">
+                            <h4>Оценки по командам:</h4>
+                            <div class="estimates-grid">
+                                <div class="form-group">
+                                    <label for="estimateIos">iOS (SP):</label>
+                                    <input type="number" id="estimateIos" name="estimate_ios" 
+                                           min="0" step="0.5" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimateAndroid">Android (SP):</label>
+                                    <input type="number" id="estimateAndroid" name="estimate_android" 
+                                           min="0" step="0.5" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimateQa">QA (SP):</label>
+                                    <input type="number" id="estimateQa" name="estimate_qa" 
+                                           min="0" step="0.5" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimateSa">SA (SP):</label>
+                                    <input type="number" id="estimateSa" name="estimate_sa" 
+                                           min="0" step="0.5" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskColor">Цвет задачи:</label>
+                            <div class="color-picker">
+                                <input type="color" id="taskColor" name="color" value="#ffeb3b">
+                                <div class="color-presets">
+                                    <button type="button" class="color-preset" data-color="#ffeb3b" style="background: #ffeb3b" title="Желтый (по умолчанию)"></button>
+                                    <button type="button" class="color-preset" data-color="#4caf50" style="background: #4caf50" title="Зеленый"></button>
+                                    <button type="button" class="color-preset" data-color="#2196f3" style="background: #2196f3" title="Синий"></button>
+                                    <button type="button" class="color-preset" data-color="#ff9800" style="background: #ff9800" title="Оранжевый"></button>
+                                    <button type="button" class="color-preset" data-color="#e91e63" style="background: #e91e63" title="Розовый"></button>
+                                    <button type="button" class="color-preset" data-color="#9c27b0" style="background: #9c27b0" title="Фиолетовый"></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="deleteTask" class="btn btn-danger" style="display: none;">Удалить</button>
+                            <div class="form-actions-right">
+                                <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
+                                <button type="submit" class="btn btn-primary">Сохранить</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Уведомления -->
+        <div id="notifications" class="notifications-container">
+            <!-- Уведомления будут добавляться динамически -->
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="js/api.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/dragdrop.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
