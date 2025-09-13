@@ -425,10 +425,48 @@ body {
     font-size: 14px;
     color: var(--text-primary);
     cursor: pointer;
+    margin-bottom: var(--spacing-xs);
 }
 
 .feature-name:hover {
     color: var(--primary-color);
+}
+
+/* Метаданные фичи */
+.feature-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--spacing-xs);
+}
+
+.feature-meta-link {
+    color: #2196f3;
+    font-size: 10px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+.feature-meta-link:hover {
+    background: rgba(33, 150, 243, 0.1);
+    text-decoration: underline;
+}
+
+.feature-project {
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 3px;
+    background: var(--bg-secondary);
+    border-radius: 2px;
+    align-self: flex-start;
+}
+
+.feature-cell.editable {
+    border: 2px dashed var(--primary-color);
+    background: rgba(33, 150, 243, 0.05);
 }
 
 .task-cell {
@@ -436,6 +474,12 @@ body {
     padding: var(--spacing-sm);
     min-height: 80px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    max-height: 400px; /* Максимальная высота для 6 тикетов */
+    overflow: visible;
 }
 
 .task-cell.droppable {
@@ -483,21 +527,66 @@ body {
 .task-estimates {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    font-size: 10px;
+    gap: 1px;
+    font-size: 8px;
     color: rgba(0,0,0,0.6);
+    width: 70%; /* Урезано на 30% */
 }
 
 .estimate {
-    padding: 1px 3px;
+    padding: 1px 2px;
     background: rgba(255,255,255,0.3);
-    border-radius: 3px;
+    border-radius: 2px;
     text-align: center;
+    font-size: 7px;
 }
 
 .estimate:not(:empty):before {
     content: attr(data-team) ': ';
     font-weight: 500;
+}
+
+/* Энейблеры в задачах */
+.task-enabler {
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.task-enabler.inactive {
+    background: #95a5a6;
+    opacity: 0.7;
+}
+
+/* Ссылки в задачах */
+.task-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: #2196f3;
+    font-size: 8px;
+    text-decoration: none;
+    margin-top: 2px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.task-link:hover {
+    background: rgba(33, 150, 243, 0.1);
+    text-decoration: underline;
+}
+
+.task-link::before {
+    content: '🔗';
+    font-size: 6px;
 }
 
 /* Backlog */

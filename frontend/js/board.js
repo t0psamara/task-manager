@@ -354,10 +354,32 @@ class BoardManager {
             featureRow.dataset.featureId = feature.id;
             featureRow.style.gridTemplateColumns = gridColumns; // Синхронизируем с заголовками
 
-            // Ячейка с названием фичи
+            // Ячейка с названием фичи и метаданными
             const featureCell = document.createElement('div');
             featureCell.className = 'feature-cell';
-            featureCell.innerHTML = `<div class="feature-name" title="${feature.name}">${feature.name}</div>`;
+            
+            // Метаданные фичи
+            const metadataHtml = [];
+            if (feature.mgmt_link) {
+                metadataHtml.push(`<a href="${feature.mgmt_link}" class="feature-meta-link" target="_blank" rel="noopener">${feature.mgmt_title || 'МГМТ'}</a>`);
+            }
+            if (feature.epic_link) {
+                metadataHtml.push(`<a href="${feature.epic_link}" class="feature-meta-link" target="_blank" rel="noopener">${feature.epic_title || 'Эпик'}</a>`);
+            }
+            if (feature.project_code) {
+                metadataHtml.push(`<div class="feature-project">проект ${feature.project_code}</div>`);
+            }
+
+            featureCell.innerHTML = `
+                <div class="feature-name" title="${feature.name}">${feature.name}</div>
+                ${metadataHtml.length > 0 ? `<div class="feature-metadata">${metadataHtml.join('')}</div>` : ''}
+            `;
+            
+            // Добавляем обработчик для редактирования фичи
+            featureCell.addEventListener('dblclick', () => {
+                this.showFeatureEditModal(feature);
+            });
+            
             featureRow.appendChild(featureCell);
 
             // Ячейки для каждого спринта
@@ -411,9 +433,19 @@ class BoardManager {
             `<div class="estimate" data-team="${est.team}">${est.value}</div>`
         ).join('');
 
+        // Создаем HTML для энейблера если он есть
+        const enablerHtml = task.enabler_title ? 
+            `<div class="task-enabler ${task.enabler_active ? 'active' : 'inactive'}">${task.enabler_title}</div>` : '';
+
+        // Создаем HTML для ссылки если она есть
+        const linkHtml = task.link_url ? 
+            `<a href="${task.link_url}" class="task-link" target="_blank" rel="noopener">${task.link_title || 'ссылка'}</a>` : '';
+
         taskCard.innerHTML = `
+            ${enablerHtml}
             <div class="task-name">${task.name}</div>
             <div class="task-estimates">${estimatesHtml}</div>
+            ${linkHtml}
         `;
 
         // Обработчик двойного клика для редактирования
@@ -484,6 +516,15 @@ class BoardManager {
     showSprintEditModal(sprint) {
         if (window.SprintEditModal) {
             window.SprintEditModal.show(sprint);
+        }
+    }
+
+    /**
+     * Показать модальное окно редактирования фичи
+     */
+    showFeatureEditModal(feature) {
+        if (window.FeatureEditModal) {
+            window.FeatureEditModal.show(feature);
         }
     }
 

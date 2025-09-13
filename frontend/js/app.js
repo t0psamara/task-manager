@@ -212,6 +212,13 @@ class FormModalManager {
             await this.handleSprintEdit(new FormData(sprintEditForm));
         });
 
+        // Обработчик редактирования фичи
+        const featureEditForm = document.getElementById('featureEditForm');
+        featureEditForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.handleFeatureEdit(new FormData(featureEditForm));
+        });
+
         // Обработчик формы задачи
         const taskForm = document.getElementById('taskForm');
         taskForm?.addEventListener('submit', async (e) => {
@@ -327,6 +334,47 @@ class FormModalManager {
         }
     }
 
+    async handleFeatureEdit(formData) {
+        if (!window.FeatureEditModal?.currentFeature) {
+            window.NotificationManager.show('Ошибка', 'Фича для редактирования не выбрана', 'error');
+            return;
+        }
+
+        try {
+            const featureId = window.FeatureEditModal.currentFeature.id;
+            const featureData = {
+                name: formData.get('name')?.trim(),
+                mgmt_title: formData.get('mgmt_title') || 'МГМТ',
+                mgmt_link: formData.get('mgmt_link') || '',
+                epic_title: formData.get('epic_title') || 'Эпик',
+                epic_link: formData.get('epic_link') || '',
+                project_code: formData.get('project_code') || ''
+            };
+
+            if (!featureData.name) {
+                window.NotificationManager.show('Ошибка', 'Название фичи не может быть пустым', 'error');
+                return;
+            }
+
+            const updatedFeature = await window.api.updateFeature(featureId, featureData);
+            
+            // Обновляем фичу в локальных данных
+            const featureIndex = window.boardManager.features.findIndex(f => f.id === featureId);
+            if (featureIndex > -1) {
+                window.boardManager.features[featureIndex] = updatedFeature;
+            }
+            
+            // Перерисовываем доску
+            window.boardManager.renderBoard();
+            
+            window.ModalManager.hide();
+
+        } catch (error) {
+            console.error('Error updating feature:', error);
+            window.ApiUtils.showApiError(error, 'обновления фичи');
+        }
+    }
+
     async handleTaskSubmit(formData) {
         try {
             const isEdit = window.TaskModal.currentTask !== null;
@@ -338,7 +386,11 @@ class FormModalManager {
                 estimate_android: formData.get('estimate_android'),
                 estimate_qa: formData.get('estimate_qa'),
                 estimate_sa: formData.get('estimate_sa'),
-                color: formData.get('color')
+                color: formData.get('color'),
+                enabler_title: formData.get('enabler_title'),
+                enabler_active: formData.get('enabler_active') === 'on',
+                link_url: formData.get('link_url'),
+                link_title: formData.get('link_title')
             });
 
             if (!taskData.name?.trim()) {
@@ -454,15 +506,28 @@ class TaskModal {
             'estimateAndroid': task.estimate_android,
             'estimateQa': task.estimate_qa,
             'estimateSa': task.estimate_sa,
-            'taskColor': task.color || '#ffeb3b'
+            'taskColor': task.color || '#ffeb3b',
+            'enablerTitle': task.enabler_title || '',
+            'linkTitle': task.link_title || '',
+            'linkUrl': task.link_url || ''
         };
 
         Object.entries(fields).forEach(([fieldId, value]) => {
             const field = document.getElementById(fieldId);
             if (field) {
-                field.value = value || '';
+                if (field.type === 'checkbox') {
+                    field.checked = value;
+                } else {
+                    field.value = value || '';
+                }
             }
         });
+
+        // Устанавливаем checkbox энейблера
+        const enablerActive = document.getElementById('enablerActive');
+        if (enablerActive) {
+            enablerActive.checked = task.enabler_active || false;
+        }
 
         // Устанавливаем активный цветовой пресет
         const colorPresets = document.querySelectorAll('.color-preset');
@@ -572,6 +637,83 @@ class SprintEditModal {
     clear() {
         this.currentSprint = null;
         const form = document.getElementById('sprintEditForm');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// ============ Менеджер редактирования фичи ============
+class FeatureEditModal {
+    constructor() {
+        this.currentFeature = null;
+        this.setupDeleteHandler();
+    }
+
+    show(feature) {
+        this.currentFeature = feature;
+        const modal = document.getElementById('featureEditModal');
+        const form = document.getElementById('featureEditForm');
+        const title = document.getElementById('featureEditTitle');
+        const deleteBtn = document.getElementById('deleteFeature');
+
+        // Обновляем заголовок
+        title.textContent = `Редактировать фичу`;
+        deleteBtn.style.display = 'inline-flex';
+
+        // Заполняем форму текущими данными
+        this.populateForm(feature);
+
+        window.ModalManager.show('featureEditModal');
+    }
+
+    populateForm(feature) {
+        const fields = {
+            'editFeatureName': feature.name || '',
+            'mgmtTitle': feature.mgmt_title || 'МГМТ',
+            'mgmtLink': feature.mgmt_link || '',
+            'epicTitle': feature.epic_title || 'Эпик',
+            'epicLink': feature.epic_link || '',
+            'projectCode': feature.project_code || ''
+        };
+
+        Object.entries(fields).forEach(([fieldId, value]) => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = value;
+            }
+        });
+    }
+
+    setupDeleteHandler() {
+        const deleteBtn = document.getElementById('deleteFeature');
+        deleteBtn?.addEventListener('click', async () => {
+            if (!this.currentFeature) return;
+
+            const confirmDelete = confirm(`Удалить фичу "${this.currentFeature.name}" и все её задачи?`);
+            if (!confirmDelete) return;
+
+            try {
+                await window.api.deleteFeature(this.currentFeature.id);
+                
+                window.boardManager.features = window.boardManager.features.filter(f => f.id !== this.currentFeature.id);
+                window.boardManager.renderBoard();
+                window.ModalManager.hide();
+
+            } catch (error) {
+                console.error('Error deleting feature:', error);
+                window.ApiUtils.showApiError(error, 'удаления фичи');
+            }
+        });
+    }
+
+    getCurrentFeature() {
+        return this.currentFeature;
+    }
+
+    clear() {
+        this.currentFeature = null;
+        const form = document.getElementById('featureEditForm');
         if (form) {
             form.reset();
         }
@@ -696,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.FormModalManager = new FormModalManager();
     window.TaskModal = new TaskModal();
     window.SprintEditModal = new SprintEditModal();
+    window.FeatureEditModal = new FeatureEditModal();
     window.CopyPasteManager = new CopyPasteManager();
 
     // Добавляем стили для уведомлений

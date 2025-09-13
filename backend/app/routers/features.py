@@ -30,7 +30,12 @@ async def create_feature(
         db_feature = models.Feature(
             board_id=board_id,
             name=feature_data.get("name"),
-            order=feature_data.get("order", 0)
+            order=feature_data.get("order", 0),
+            mgmt_link=feature_data.get("mgmt_link", ""),
+            mgmt_title=feature_data.get("mgmt_title", "МГМТ"),
+            epic_link=feature_data.get("epic_link", ""),
+            epic_title=feature_data.get("epic_title", "Эпик"),
+            project_code=feature_data.get("project_code", "")
         )
         db.add(db_feature)
         await db.flush()
@@ -40,7 +45,12 @@ async def create_feature(
             "id": db_feature.id,
             "board_id": db_feature.board_id,
             "name": db_feature.name,
-            "order": db_feature.order
+            "order": db_feature.order,
+            "mgmt_link": db_feature.mgmt_link or "",
+            "mgmt_title": db_feature.mgmt_title or "МГМТ",
+            "epic_link": db_feature.epic_link or "",
+            "epic_title": db_feature.epic_title or "Эпик",
+            "project_code": db_feature.project_code or ""
         }
     except HTTPException:
         raise
@@ -64,7 +74,12 @@ async def get_features(board_id: int = None, db: AsyncSession = Depends(get_db))
             "id": feature.id,
             "board_id": feature.board_id,
             "name": feature.name,
-            "order": feature.order
+            "order": feature.order,
+            "mgmt_link": feature.mgmt_link or "",
+            "mgmt_title": feature.mgmt_title or "МГМТ",
+            "epic_link": feature.epic_link or "",
+            "epic_title": feature.epic_title or "Эпик",
+            "project_code": feature.project_code or ""
         }
         for feature in features
     ]

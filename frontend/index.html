@@ -144,6 +144,73 @@
             </div>
         </div>
 
+        <!-- Модальное окно редактирования фичи -->
+        <div id="featureEditModal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3 id="featureEditTitle">Редактировать фичу</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="featureEditForm">
+                        <div class="feature-edit-grid">
+                            <!-- Название -->
+                            <div class="form-group">
+                                <label for="editFeatureName">Название фичи:</label>
+                                <input type="text" id="editFeatureName" name="name" required
+                                       maxlength="255" placeholder="Например: Авторизация пользователей">
+                            </div>
+
+                            <!-- Ссылки -->
+                            <div class="links-section">
+                                <h4>Ссылки:</h4>
+                                <div class="link-config">
+                                    <div class="form-group">
+                                        <label for="mgmtTitle">Название ссылки МГМТ:</label>
+                                        <input type="text" id="mgmtTitle" name="mgmt_title" 
+                                               maxlength="100" placeholder="МГМТ" value="МГМТ">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="mgmtLink">URL МГМТ:</label>
+                                        <input type="url" id="mgmtLink" name="mgmt_link" 
+                                               maxlength="500" placeholder="https://mgmt.example.com/feature/123">
+                                    </div>
+                                </div>
+                                
+                                <div class="link-config">
+                                    <div class="form-group">
+                                        <label for="epicTitle">Название ссылки Эпик:</label>
+                                        <input type="text" id="epicTitle" name="epic_title" 
+                                               maxlength="100" placeholder="Эпик" value="Эпик">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="epicLink">URL Эпик:</label>
+                                        <input type="url" id="epicLink" name="epic_link" 
+                                               maxlength="500" placeholder="https://epic.example.com/epic/456">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Проект -->
+                            <div class="form-group">
+                                <label for="projectCode">Код проекта (до 5 символов):</label>
+                                <input type="text" id="projectCode" name="project_code" 
+                                       maxlength="5" placeholder="12345" pattern="[0-9]{1,5}">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="deleteFeature" class="btn btn-danger" style="display: none;">Удалить фичу</button>
+                            <div class="form-actions-right">
+                                <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
+                                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Модальное окно редактирования спринта -->
         <div id="sprintEditModal" class="modal">
             <div class="modal-content modal-large">
@@ -309,6 +376,37 @@
                                     <button type="button" class="color-preset" data-color="#e91e63" style="background: #e91e63" title="Розовый"></button>
                                     <button type="button" class="color-preset" data-color="#9c27b0" style="background: #9c27b0" title="Фиолетовый"></button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Энейблер -->
+                        <div class="enabler-section">
+                            <h4>Энейблер:</h4>
+                            <div class="form-group">
+                                <label for="enablerTitle">Заголовок энейблера:</label>
+                                <input type="text" id="enablerTitle" name="enabler_title" 
+                                       maxlength="100" placeholder="Например: БЛОКЕР или РИСК">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="enablerActive" name="enabler_active">
+                                    Энейблер активен
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Ссылка -->
+                        <div class="link-section">
+                            <h4>Ссылка:</h4>
+                            <div class="form-group">
+                                <label for="linkTitle">Название ссылки:</label>
+                                <input type="text" id="linkTitle" name="link_title" 
+                                       maxlength="100" placeholder="Например: Техническое задание">
+                            </div>
+                            <div class="form-group">
+                                <label for="linkUrl">URL ссылки:</label>
+                                <input type="url" id="linkUrl" name="link_url" 
+                                       maxlength="500" placeholder="https://docs.example.com/task/123">
                             </div>
                         </div>
 

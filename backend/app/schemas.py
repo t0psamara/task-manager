@@ -13,6 +13,10 @@ class TaskBase(BaseModel):
     position_x: float = Field(default=0.0)
     position_y: float = Field(default=0.0)
     color: str = Field(default="#ffeb3b", pattern=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
+    enabler_title: str = Field(default="", max_length=100)
+    enabler_active: bool = Field(default=False)
+    link_url: str = Field(default="", max_length=500)
+    link_title: str = Field(default="", max_length=100)
 
 
 class TaskCreate(TaskBase):
@@ -31,6 +35,10 @@ class TaskUpdate(BaseModel):
     color: Optional[str] = Field(None, pattern=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     sprint_id: Optional[int] = None
     feature_id: Optional[int] = None
+    enabler_title: Optional[str] = Field(None, max_length=100)
+    enabler_active: Optional[bool] = None
+    link_url: Optional[str] = Field(None, max_length=500)
+    link_title: Optional[str] = Field(None, max_length=100)
 
 
 class Task(TaskBase):
@@ -47,6 +55,11 @@ class Task(TaskBase):
 class FeatureBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     order: int = Field(default=0)
+    mgmt_link: str = Field(default="", max_length=500)
+    mgmt_title: str = Field(default="МГМТ", max_length=100)
+    epic_link: str = Field(default="", max_length=500)
+    epic_title: str = Field(default="Эпик", max_length=100)
+    project_code: str = Field(default="", max_length=5)
 
 
 class FeatureCreate(FeatureBase):
@@ -56,6 +69,11 @@ class FeatureCreate(FeatureBase):
 class FeatureUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     order: Optional[int] = None
+    mgmt_link: Optional[str] = Field(None, max_length=500)
+    mgmt_title: Optional[str] = Field(None, max_length=100)
+    epic_link: Optional[str] = Field(None, max_length=500)
+    epic_title: Optional[str] = Field(None, max_length=100)
+    project_code: Optional[str] = Field(None, max_length=5)
 
 
 class Feature(FeatureBase):

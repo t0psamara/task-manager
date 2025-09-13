@@ -46,7 +46,11 @@ async def create_task(
             estimate_sa=float(task_data.get("estimate_sa", 0)),
             position_x=float(task_data.get("position_x", 0)),
             position_y=float(task_data.get("position_y", 0)),
-            color=task_data.get("color", "#ffeb3b")
+            color=task_data.get("color", "#ffeb3b"),
+            enabler_title=task_data.get("enabler_title", ""),
+            enabler_active=bool(task_data.get("enabler_active", False)),
+            link_url=task_data.get("link_url", ""),
+            link_title=task_data.get("link_title", "")
         )
         db.add(db_task)
         await db.flush()
@@ -64,6 +68,10 @@ async def create_task(
             "position_x": db_task.position_x,
             "position_y": db_task.position_y,
             "color": db_task.color,
+            "enabler_title": db_task.enabler_title or "",
+            "enabler_active": db_task.enabler_active or False,
+            "link_url": db_task.link_url or "",
+            "link_title": db_task.link_title or "",
             "created_at": db_task.created_at.isoformat(),
             "updated_at": db_task.updated_at.isoformat() if db_task.updated_at else None
         }
@@ -110,6 +118,10 @@ async def get_tasks(
             "position_x": task.position_x,
             "position_y": task.position_y,
             "color": task.color,
+            "enabler_title": task.enabler_title or "",
+            "enabler_active": task.enabler_active or False,
+            "link_url": task.link_url or "",
+            "link_title": task.link_title or "",
             "created_at": task.created_at.isoformat(),
             "updated_at": task.updated_at.isoformat() if task.updated_at else None
         }

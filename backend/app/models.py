@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -53,6 +53,13 @@ class Feature(Base):
     name = Column(String(255), nullable=False)
     order = Column(Integer, default=0)  # Порядок отображения
     
+    # Метаданные фичи
+    mgmt_link = Column(Text, default="")  # Ссылка на МГМТ
+    mgmt_title = Column(String(100), default="МГМТ")  # Название ссылки МГМТ
+    epic_link = Column(Text, default="")  # Ссылка на Эпик
+    epic_title = Column(String(100), default="Эпик")  # Название ссылки Эпик
+    project_code = Column(String(5), default="")  # Код проекта (до 5 символов)
+    
     # Связи
     board = relationship("Board", back_populates="features")
     tasks = relationship("Task", back_populates="feature", cascade="all, delete-orphan")
@@ -80,6 +87,12 @@ class Task(Base):
     
     # Цвет стикера
     color = Column(String(7), default="#ffeb3b")  # Hex цвет
+    
+    # Дополнительные поля
+    enabler_title = Column(String(100), default="")  # Заголовок энейблера
+    enabler_active = Column(Boolean, default=False)  # Активен ли энейблер
+    link_url = Column(Text, default="")  # Ссылка на внешний ресурс
+    link_title = Column(String(100), default="")  # Название ссылки
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
