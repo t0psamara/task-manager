@@ -344,24 +344,25 @@ class BoardManager {
      */
     calculateSprintWidths() {
         const baseWidth = 200; // Минимальная ширина столбца
-        const taskWidth = 94; // Ширина одного тикета
+        const taskWidth = 100; // Ширина одного тикета + отступы
+        const maxTasksPerColumn = 6; // Максимум тикетов в одной колонке
         
         return this.sprints.map(sprint => {
-            let maxTasksInCell = 0;
+            let maxColumnsNeeded = 1;
             
-            // Находим максимальное количество тикетов в любой ячейке этого спринта
+            // Находим максимальное количество колонок тикетов в любой ячейке этого спринта
             this.features.forEach(feature => {
                 const tasksInCell = this.tasks.filter(
                     task => task.sprint_id === sprint.id && task.feature_id === feature.id
                 ).length;
                 
                 // Рассчитываем количество колонок тикетов (6 тикетов в колонке максимум)
-                const columns = Math.ceil(tasksInCell / 6);
-                maxTasksInCell = Math.max(maxTasksInCell, columns);
+                const columnsNeeded = Math.ceil(tasksInCell / maxTasksPerColumn);
+                maxColumnsNeeded = Math.max(maxColumnsNeeded, columnsNeeded);
             });
             
             // Рассчитываем ширину столбца
-            const calculatedWidth = baseWidth + (maxTasksInCell > 1 ? (maxTasksInCell - 1) * taskWidth : 0);
+            const calculatedWidth = baseWidth + (maxColumnsNeeded > 1 ? (maxColumnsNeeded - 1) * taskWidth : 0);
             
             return Math.max(calculatedWidth, baseWidth);
         });
@@ -419,14 +420,12 @@ class BoardManager {
                 taskCell.dataset.featureId = feature.id;
                 taskCell.dataset.sprintId = sprint.id;
 
-                // Добавляем задачи в ячейку
+                // Добавляем задачи в ячейку с многорядной компоновкой
                 const featureTasks = this.tasks.filter(
                     task => task.feature_id === feature.id && task.sprint_id === sprint.id
                 );
                 
-                featureTasks.forEach(task => {
-                    taskCell.appendChild(this.createTaskElement(task));
-                });
+                this.renderTasksInCell(taskCell, featureTasks);
 
                 featureRow.appendChild(taskCell);
             });
@@ -447,7 +446,14 @@ class BoardManager {
         const taskCard = document.createElement('div');
         taskCard.className = 'task-card';
         taskCard.dataset.taskId = task.id;
-        taskCard.style.backgroundColor = task.color || '#ffeb3b';
+        
+        // Проверяем это свернутая фича
+        if (task.is_collapsed_feature) {
+            taskCard.classList.add('collapsed-feature');
+            taskCard.style.backgroundColor = '#9c27b0'; // Фиолетовый для свернутых фич
+        } else {
+            taskCard.style.backgroundColor = task.color || '#ffeb3b';
+        }
         
         // Делаем задачу перетаскиваемой
         taskCard.draggable = true;
@@ -467,8 +473,6 @@ class BoardManager {
         const enablerHtml = task.enabler_title ? 
             `<div class="task-enabler active">${task.enabler_title}</div>` : '';
 
-        // Убрали ссылки из тикетов
-
         taskCard.innerHTML = `
             ${enablerHtml}
             <div class="task-name">${task.name}</div>
@@ -477,10 +481,44 @@ class BoardManager {
 
         // Обработчик двойного клика для редактирования
         taskCard.addEventListener('dblclick', () => {
-            this.showTaskModal(task);
+            if (task.is_collapsed_feature) {
+                // Для свернутых фич показываем информацию о восстановлении
+                const originalTasks = task.original_feature_tasks ? JSON.parse(task.original_feature_tasks) : [];
+                alert(`Свернутая фича: ${task.name}\nОригинальных задач: ${originalTasks.length}\nПеретащите в ячейку спринта для восстановления`);
+            } else {
+                this.showTaskModal(task);
+            }
         });
 
         return taskCard;
+    }
+
+    /**
+     * Отрендерить задачи в ячейке с многорядной компоновкой
+     */
+    renderTasksInCell(taskCell, tasks) {
+        const maxTasksPerColumn = 6;
+        const taskHeight = 60; // Высота одного тикета
+        const columns = Math.ceil(tasks.length / maxTasksPerColumn);
+        
+        // Очищаем ячейку
+        taskCell.innerHTML = '';
+        
+        // Устанавливаем размеры ячейки
+        const cellWidth = 200 + (columns > 1 ? (columns - 1) * 100 : 0);
+        const cellHeight = Math.min(tasks.length, maxTasksPerColumn) * taskHeight + 16; // +отступы
+        
+        taskCell.style.width = `${cellWidth}px`;
+        taskCell.style.height = `${cellHeight}px`;
+        taskCell.style.maxHeight = `${maxTasksPerColumn * taskHeight + 16}px`;
+        
+        console.log(`Rendering ${tasks.length} tasks in ${columns} columns, cell size: ${cellWidth}x${cellHeight}`);
+        
+        // Добавляем задачи
+        tasks.forEach((task, index) => {
+            const taskElement = this.createTaskElement(task);
+            taskCell.appendChild(taskElement);
+        });
     }
 
     /**

@@ -16,6 +16,7 @@ class TaskBase(BaseModel):
     enabler_title: str = Field(default="", max_length=100)
     enabler_active: bool = Field(default=True)  # Всегда активен
     is_collapsed_feature: bool = Field(default=False)  # Свернутая фича
+    original_feature_tasks: Optional[str] = Field(default=None)  # JSON с оригинальными задачами
 
 
 class TaskCreate(TaskBase):
@@ -36,6 +37,8 @@ class TaskUpdate(BaseModel):
     feature_id: Optional[int] = None
     enabler_title: Optional[str] = Field(None, max_length=100)
     enabler_active: Optional[bool] = Field(default=True)  # Всегда активен
+    is_collapsed_feature: Optional[bool] = Field(default=False)
+    original_feature_tasks: Optional[str] = Field(default=None)
 
 
 class Task(TaskBase):

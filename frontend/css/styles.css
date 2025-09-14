@@ -474,13 +474,12 @@ body {
     padding: var(--spacing-sm);
     min-height: 80px;
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, 94px); /* Автоматические колонки по ширине тикета */
-    grid-template-rows: repeat(6, auto); /* Максимум 6 рядов в одной колонке */
-    grid-auto-flow: column; /* Заполняем сначала по вертикали, потом новая колонка */
-    gap: 2px;
-    min-width: 100px;
-    width: max-content; /* Автоматическая ширина по содержимому */
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    min-width: 200px; /* Базовая минимальная ширина */
+    max-height: 400px; /* Ограничиваем высоту для переноса */
     overflow: visible;
 }
 
@@ -506,8 +505,33 @@ body {
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     user-select: none;
-    width: 92px; /* Немного расширили для больших оценок */
+    width: 92px; /* Немого расширили для больших оценок */
     min-height: 50px;
+}
+
+/* Свернутые фичи в backlog */
+.task-card.collapsed-feature {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    color: white;
+    border: 2px solid #7b1fa2;
+    width: 140px; /* Шире для отображения суммарных данных */
+    min-height: 70px;
+}
+
+.task-card.collapsed-feature .task-name {
+    color: white;
+    font-weight: 600;
+}
+
+.task-card.collapsed-feature .task-estimates {
+    color: rgba(255,255,255,0.9);
+    width: 100%; /* Полная ширина для суммарных данных */
+}
+
+.task-card.collapsed-feature .task-enabler {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 .task-card:hover {
