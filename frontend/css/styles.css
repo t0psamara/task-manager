@@ -404,7 +404,8 @@ body {
     display: grid;
     grid-template-columns: 300px repeat(auto-fill, minmax(200px, 1fr));
     gap: 1px;
-    background: var(--border-color);
+    min-height: 320px; /* Фиксированная минимальная высота для синхронизации строк */
+    align-items: start;
 }
 
 .feature-cell {
@@ -482,6 +483,12 @@ body {
     min-width: 200px;
     width: max-content; /* Ширина по содержимому */
     overflow: visible;
+    cursor: pointer; /* Указываем что ячейка кликабельна */
+    transition: background-color 0.2s ease;
+}
+
+.task-cell:hover:not(.droppable) {
+    background: rgba(33, 150, 243, 0.05); /* Легкая подсветка при наведении */
 }
 
 .task-cell.droppable {

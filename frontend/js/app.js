@@ -392,7 +392,7 @@ class FormModalManager {
             const taskData = window.ApiUtils.formatTaskData({
                 name: formData.get('name'),
                 feature_id: formData.get('feature_id') || window.TaskModal.defaultFeatureId,
-                sprint_id: formData.get('sprint_id') || null,
+                sprint_id: formData.get('sprint_id') || (isEdit ? window.TaskModal.currentTask?.sprint_id : null),
                 estimate_ios: formData.get('estimate_ios'),
                 estimate_android: formData.get('estimate_android'),
                 estimate_qa: formData.get('estimate_qa'),
@@ -472,7 +472,7 @@ class TaskModal {
         this.setupDeleteHandler();
     }
 
-    show(task = null, boardId = null) {
+    show(task = null, boardId = null, presetFeatureId = null, presetSprintId = null) {
         this.currentTask = task;
         const modal = document.getElementById('taskModal');
         const form = document.getElementById('taskForm');
@@ -502,8 +502,8 @@ class TaskModal {
             }
         }
 
-        this.populateFeatureSelect(boardId);
-        this.populateSprintSelect(boardId);
+        this.populateFeatureSelect(boardId, presetFeatureId);
+        this.populateSprintSelect(boardId, presetSprintId);
 
         window.ModalManager.show('taskModal');
     }
@@ -539,24 +539,47 @@ class TaskModal {
         });
     }
 
-    populateFeatureSelect(boardId) {
+    populateFeatureSelect(boardId, presetFeatureId = null) {
         if (!window.boardManager?.features) return;
 
         const features = window.boardManager.features;
-        // Добавим поле выбора фичи в форму (сейчас его нет в HTML)
-        // Пока будем использовать defaultFeatureId
-        if (features.length > 0 && !this.currentTask) {
-            this.defaultFeatureId = features[0].id;
+        
+        // Устанавливаем defaultFeatureId
+        if (presetFeatureId) {
+            this.defaultFeatureId = presetFeatureId;
         } else if (this.currentTask) {
             this.defaultFeatureId = this.currentTask.feature_id;
+        } else if (features.length > 0) {
+            this.defaultFeatureId = features[0].id;
         }
+        
+        console.log('Feature ID preset to:', this.defaultFeatureId);
     }
 
-    populateSprintSelect(boardId) {
+    populateSprintSelect(boardId, presetSprintId = null) {
         if (!window.boardManager?.sprints) return;
 
         const sprints = window.boardManager.sprints;
-        // Аналогично для спринтов - добавим позже в HTML
+        
+        // Если есть предустановленный sprint_id, добавляем скрытое поле в форму
+        if (presetSprintId) {
+            let sprintField = document.getElementById('presetSprintId');
+            if (!sprintField) {
+                sprintField = document.createElement('input');
+                sprintField.type = 'hidden';
+                sprintField.id = 'presetSprintId';
+                sprintField.name = 'sprint_id';
+                document.getElementById('taskForm').appendChild(sprintField);
+            }
+            sprintField.value = presetSprintId;
+            console.log('Sprint ID preset to:', presetSprintId);
+        } else {
+            // Удаляем скрытое поле если оно есть
+            const sprintField = document.getElementById('presetSprintId');
+            if (sprintField) {
+                sprintField.remove();
+            }
+        }
     }
 
     setupDeleteHandler() {

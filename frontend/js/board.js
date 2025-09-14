@@ -433,6 +433,14 @@ class BoardManager {
                 );
                 
                 this.renderTasksInCell(taskCell, featureTasks);
+                
+                // Добавляем обработчик клика для создания нового тикета
+                taskCell.addEventListener('click', (e) => {
+                    // Проверяем что клик был не по тикету или энейблеру
+                    if (!e.target.closest('.task-card') && !e.target.closest('.task-enabler')) {
+                        this.showTaskModal(null, feature.id, sprint.id);
+                    }
+                });
 
                 featureRow.appendChild(taskCell);
             });
@@ -583,9 +591,9 @@ class BoardManager {
     /**
      * Показать модальное окно задачи
      */
-    showTaskModal(task = null) {
+    showTaskModal(task = null, presetFeatureId = null, presetSprintId = null) {
         if (window.TaskModal) {
-            window.TaskModal.show(task, this.currentBoard?.id);
+            window.TaskModal.show(task, this.currentBoard?.id, presetFeatureId, presetSprintId);
         }
     }
 

@@ -681,23 +681,30 @@ class DragDropManager {
         try {
             console.log(`Reordering feature ${featureId} from ${oldIndex} to ${newIndex}`);
 
-            // Обновляем порядок в локальных данных
-            const feature = window.boardManager.features.find(f => f.id === featureId);
-            if (feature) {
-                // Обновляем order для данной фичи
-                const newOrder = newIndex;
+            // Получаем все элементы фичей в новом порядке
+            const featureRows = Array.from(document.querySelectorAll('.feature-row'));
+            
+            // Обновляем order для всех фичей согласно новому порядку
+            const updatePromises = featureRows.map(async (row, index) => {
+                const rowFeatureId = parseInt(row.dataset.featureId);
+                const feature = window.boardManager.features.find(f => f.id === rowFeatureId);
                 
-                // Обновляем на сервере
-                await window.api.updateFeature(featureId, { order: newOrder });
-                
-                // Обновляем локальные данные
-                feature.order = newOrder;
-                
-                // Пересортировываем все фичи
-                window.boardManager.features.sort((a, b) => a.order - b.order);
-                
-                console.log('Feature reordered successfully');
-            }
+                if (feature && feature.order !== index) {
+                    // Обновляем на сервере
+                    await window.api.updateFeature(rowFeatureId, { order: index });
+                    
+                    // Обновляем локально
+                    feature.order = index;
+                }
+            });
+            
+            // Ждем все обновления
+            await Promise.all(updatePromises);
+            
+            // Пересортировываем локальные данные
+            window.boardManager.features.sort((a, b) => a.order - b.order);
+            
+            console.log('Feature reordered successfully');
 
         } catch (error) {
             console.error('Error reordering feature:', error);
