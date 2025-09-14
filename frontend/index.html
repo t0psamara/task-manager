@@ -15,7 +15,7 @@
         <!-- Заголовок и панель управления -->
         <header class="app-header">
             <div class="header-content">
-                <h1 class="app-title">📋 Task Manager</h1>
+                <h1 class="app-title">📋 Планирование кварталов</h1>
                 <div class="header-controls">
                     <select id="boardSelect" class="board-selector">
                         <option value="">Выберите доску...</option>
@@ -88,11 +88,10 @@
 
             <!-- Backlog -->
             <div class="backlog-section">
-                <h3>📦 Backlog - Неназначенные задачи</h3>
+                <h3>📦 Backlog - Незапланированные задачи</h3>
                 <div id="backlogTasks" class="backlog-tasks">
                     <!-- Задачи backlog будут добавлены динамически -->
                 </div>
-                <button id="addTaskToBacklog" class="btn btn-dashed">+ Добавить задачу в backlog</button>
             </div>
         </main>
 
@@ -110,7 +109,7 @@
                         <div class="form-group">
                             <label for="boardName">Название доски:</label>
                             <input type="text" id="boardName" name="name" required
-                                   placeholder="Например: Sprint Planning Q1 2024">
+                                   placeholder="Например: Superapp Q4 2025">
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-outline modal-cancel">Отмена</button>
@@ -166,7 +165,7 @@
                                 <h4>Ссылки:</h4>
                                 <div class="link-config">
                                     <div class="form-group">
-                                        <label for="mgmtLink">URL МГМТ (название извлекается автоматически):</label>
+                                        <label for="mgmtLink">URL МГМТ:</label>
                                         <input type="url" id="mgmtLink" name="mgmt_link" 
                                                maxlength="500" placeholder="https://mgmt.example.com/feature/AUTH-123">
                                     </div>
@@ -174,7 +173,7 @@
                                 
                                 <div class="link-config">
                                     <div class="form-group">
-                                        <label for="epicLink">URL Эпик (название извлекается автоматически):</label>
+                                        <label for="epicLink">URL Эпик:</label>
                                         <input type="url" id="epicLink" name="epic_link" 
                                                maxlength="500" placeholder="https://jira.example.com/epic/AUTH-456">
                                     </div>
@@ -183,7 +182,7 @@
 
                             <!-- Проект -->
                             <div class="form-group">
-                                <label for="projectCode">Код проекта (до 5 символов):</label>
+                                <label for="projectCode">Код проекта:</label>
                                 <input type="text" id="projectCode" name="project_code" 
                                        maxlength="5" placeholder="12345" pattern="[0-9]{1,5}">
                             </div>
@@ -216,22 +215,22 @@
                                 <h4>Емкость команд:</h4>
                                 <div class="capacity-grid">
                                     <div class="form-group">
-                                        <label for="editCapacityIos">iOS разработка:</label>
+                                        <label for="editCapacityIos">iOS:</label>
                                         <input type="number" id="editCapacityIos" name="capacity_ios" 
                                                min="0" step="0.5" placeholder="0">
                                     </div>
                                     <div class="form-group">
-                                        <label for="editCapacityAndroid">Android разработка:</label>
+                                        <label for="editCapacityAndroid">Android:</label>
                                         <input type="number" id="editCapacityAndroid" name="capacity_android" 
                                                min="0" step="0.5" placeholder="0">
                                     </div>
                                     <div class="form-group">
-                                        <label for="editCapacityQa">QA тестирование:</label>
+                                        <label for="editCapacityQa">QA:</label>
                                         <input type="number" id="editCapacityQa" name="capacity_qa" 
                                                min="0" step="0.5" placeholder="0">
                                     </div>
                                     <div class="form-group">
-                                        <label for="editCapacitySa">Системный анализ:</label>
+                                        <label for="editCapacitySa">SA:</label>
                                         <input type="number" id="editCapacitySa" name="capacity_sa" 
                                                min="0" step="0.5" placeholder="0">
                                     </div>
@@ -240,65 +239,62 @@
 
                             <!-- Описание -->
                             <div class="description-section">
-                                <h4>Описание спринта:</h4>
+                                <h4>Даты спринта:</h4>
                                 <div class="form-group">
-                                    <label for="sprintDescription">Текст под названием спринта:</label>
                                     <input type="text" id="sprintDescription" name="description" 
-                                           maxlength="255" placeholder="Например: Релиз мобильного приложения">
+                                           maxlength="255" placeholder="Например: 20 сентября - 3 октября">
                                 </div>
                             </div>
 
                             <!-- Бейджи -->
                             <div class="badges-section">
-                                <h4>Бейджи спринта:</h4>
+                                <h4>Метки релизов:</h4>
                                 
                                 <!-- Первый бейдж -->
                                 <div class="badge-config">
-                                    <h5>Бейдж 1:</h5>
+                                    <h5>Релиз ГУ:</h5>
                                     <div class="badge-form-row">
                                         <div class="form-group">
-                                            <label for="badge1Text">Текст:</label>
+                                            <label for="badge1Text">Номер:</label>
                                             <input type="text" id="badge1Text" name="badge1_text" 
-                                                   maxlength="50" placeholder="MVP">
+                                                   maxlength="50" placeholder="24.0.0">
                                         </div>
                                         <div class="form-group">
                                             <label for="badge1Color">Цвет:</label>
                                             <select id="badge1Color" name="badge1_color">
                                                 <option value="blue">🔵 Синий</option>
-                                                <option value="red">🔴 Красный</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="badge1Tooltip">Подсказка (при наведении):</label>
+                                        <label for="badge1Tooltip">Даты релиза:</label>
                                         <textarea id="badge1Tooltip" name="badge1_tooltip" 
                                                   maxlength="500" rows="3" 
-                                                  placeholder="Первая строка подсказки&#10;Вторая строка подсказки&#10;Третья строка подсказки"></textarea>
+                                                  placeholder="Регресс: 01.09&#10;Приёмка: 14.09&#10;На ревью в сторы: 16.09"></textarea>
                                     </div>
                                 </div>
 
                                 <!-- Второй бейдж -->
                                 <div class="badge-config">
-                                    <h5>Бейдж 2:</h5>
+                                    <h5>Релиз Авто:</h5>
                                     <div class="badge-form-row">
                                         <div class="form-group">
-                                            <label for="badge2Text">Текст:</label>
+                                            <label for="badge2Text">Номер:</label>
                                             <input type="text" id="badge2Text" name="badge2_text" 
-                                                   maxlength="50" placeholder="HOT">
+                                                   maxlength="50" placeholder="9.0.0">
                                         </div>
                                         <div class="form-group">
                                             <label for="badge2Color">Цвет:</label>
                                             <select id="badge2Color" name="badge2_color">
-                                                <option value="blue">🔵 Синий</option>
                                                 <option value="red">🔴 Красный</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="badge2Tooltip">Подсказка (при наведении):</label>
+                                        <label for="badge2Tooltip">Даты релиза:</label>
                                         <textarea id="badge2Tooltip" name="badge2_tooltip" 
                                                   maxlength="500" rows="3" 
-                                                  placeholder="Первая строка подсказки&#10;Вторая строка подсказки&#10;Третья строка подсказки"></textarea>
+                                                  placeholder="Регресс: 01.09&#10;Приёмка: 14.09&#10;На ревью в сторы: 16.09"></textarea>
                                     </div>
                                 </div>
                             </div>
