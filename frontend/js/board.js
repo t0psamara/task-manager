@@ -237,8 +237,10 @@ class BoardManager {
         // Синхронизируем количество колонок с количеством спринтов
         const sprintCount = this.sprints.length;
         const sprintWidths = this.calculateSprintWidths();
-        const gridColumns = `300px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
+        const gridColumns = `200px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
         this.sprintHeaders.style.gridTemplateColumns = gridColumns;
+        
+        console.log('Sprint headers synchronized:', gridColumns);
         
         this.sprints.forEach(sprint => {
             const sprintHeader = document.createElement('div');
@@ -344,27 +346,32 @@ class BoardManager {
      */
     calculateSprintWidths() {
         const baseWidth = 200; // Минимальная ширина столбца
-        const taskWidth = 100; // Ширина одного тикета + отступы
-        const maxTasksPerColumn = 6; // Максимум тикетов в одной колонке
+        const taskColumnWidth = 94; // Ширина одного столбца тикетов
+        const maxTasksPerColumn = 5; // Максимум 5 тикетов по вертикали
+        const maxColumnsPerCell = 5; // Максимум 5 столбцов в ячейке
         
         return this.sprints.map(sprint => {
-            let maxColumnsNeeded = 1;
+            let maxCellWidth = baseWidth;
             
-            // Находим максимальное количество колонок тикетов в любой ячейке этого спринта
+            // Находим максимальную ширину ячейки в этом спринте
             this.features.forEach(feature => {
                 const tasksInCell = this.tasks.filter(
                     task => task.sprint_id === sprint.id && task.feature_id === feature.id
                 ).length;
                 
-                // Рассчитываем количество колонок тикетов (6 тикетов в колонке максимум)
-                const columnsNeeded = Math.ceil(tasksInCell / maxTasksPerColumn);
-                maxColumnsNeeded = Math.max(maxColumnsNeeded, columnsNeeded);
+                // Рассчитываем количество столбцов тикетов (5 тикетов в столбце максимум)
+                const columnsNeeded = Math.min(Math.ceil(tasksInCell / maxTasksPerColumn), maxColumnsPerCell);
+                
+                // Рассчитываем ширину этой ячейки
+                const cellWidth = Math.max(
+                    baseWidth, 
+                    16 + (columnsNeeded * taskColumnWidth) + ((columnsNeeded - 1) * 2) // padding + columns + gaps
+                );
+                
+                maxCellWidth = Math.max(maxCellWidth, cellWidth);
             });
             
-            // Рассчитываем ширину столбца
-            const calculatedWidth = baseWidth + (maxColumnsNeeded > 1 ? (maxColumnsNeeded - 1) * taskWidth : 0);
-            
-            return Math.max(calculatedWidth, baseWidth);
+            return maxCellWidth;
         });
     }
 
@@ -377,7 +384,7 @@ class BoardManager {
         // Синхронизируем количество колонок с заголовками спринтов  
         const sprintCount = this.sprints.length;
         const sprintWidths = this.calculateSprintWidths();
-        const gridColumns = `300px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
+        const gridColumns = `200px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
 
         this.features.forEach(feature => {
             const featureRow = document.createElement('div');
@@ -494,31 +501,38 @@ class BoardManager {
     }
 
     /**
-     * Отрендерить задачи в ячейке с многорядной компоновкой
+     * Отрендерить задачи в ячейке с упрощенной компоновкой
      */
     renderTasksInCell(taskCell, tasks) {
-        const maxTasksPerColumn = 6;
-        const taskHeight = 60; // Высота одного тикета
-        const columns = Math.ceil(tasks.length / maxTasksPerColumn);
+        const maxTasksPerColumn = 5; // Максимум 5 тикетов по вертикали
+        const maxColumnsPerCell = 5; // Максимум 5 столбцов в ячейке
         
         // Очищаем ячейку
         taskCell.innerHTML = '';
         
-        // Устанавливаем размеры ячейки
-        const cellWidth = 200 + (columns > 1 ? (columns - 1) * 100 : 0);
-        const cellHeight = Math.min(tasks.length, maxTasksPerColumn) * taskHeight + 16; // +отступы
+        // Ограничиваем количество тикетов до максимума
+        const visibleTasks = tasks.slice(0, maxTasksPerColumn * maxColumnsPerCell);
+        const hiddenCount = tasks.length - visibleTasks.length;
         
-        taskCell.style.width = `${cellWidth}px`;
-        taskCell.style.height = `${cellHeight}px`;
-        taskCell.style.maxHeight = `${maxTasksPerColumn * taskHeight + 16}px`;
-        
-        console.log(`Rendering ${tasks.length} tasks in ${columns} columns, cell size: ${cellWidth}x${cellHeight}`);
+        console.log(`Rendering ${visibleTasks.length} tasks (${hiddenCount} hidden), ${Math.ceil(visibleTasks.length / maxTasksPerColumn)} columns`);
         
         // Добавляем задачи
-        tasks.forEach((task, index) => {
+        visibleTasks.forEach((task, index) => {
             const taskElement = this.createTaskElement(task);
             taskCell.appendChild(taskElement);
         });
+        
+        // Добавляем индикатор скрытых тикетов если есть
+        if (hiddenCount > 0) {
+            const hiddenIndicator = document.createElement('div');
+            hiddenIndicator.className = 'task-card hidden-tasks-indicator';
+            hiddenIndicator.innerHTML = `<div class="task-name">+${hiddenCount} скрыто</div>`;
+            hiddenIndicator.style.backgroundColor = '#757575';
+            hiddenIndicator.style.color = 'white';
+            hiddenIndicator.style.cursor = 'pointer';
+            hiddenIndicator.title = 'Превышен лимит отображения тикетов (25 максимум)';
+            taskCell.appendChild(hiddenIndicator);
+        }
     }
 
     /**

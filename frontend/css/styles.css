@@ -474,12 +474,13 @@ body {
     padding: var(--spacing-sm);
     min-height: 80px;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    min-width: 200px; /* Базовая минимальная ширина */
-    max-height: 400px; /* Ограничиваем высоту для переноса */
+    display: grid;
+    grid-template-rows: repeat(5, auto); /* Максимум 5 тикетов по вертикали */
+    grid-auto-flow: column; /* Новые тикеты идут в следующий столбец */
+    grid-auto-columns: 94px; /* Ширина одного столбца тикетов */
+    gap: 2px;
+    min-width: 200px;
+    width: max-content; /* Ширина по содержимому */
     overflow: visible;
 }
 
@@ -532,6 +533,20 @@ body {
     background: rgba(255,255,255,0.2);
     color: white;
     border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Индикатор скрытых тикетов */
+.task-card.hidden-tasks-indicator {
+    background: #757575 !important;
+    color: white !important;
+    cursor: pointer;
+    border: 1px solid #424242;
+    font-weight: 500;
+}
+
+.task-card.hidden-tasks-indicator:hover {
+    background: #616161 !important;
+    transform: none; /* Отключаем анимацию подъема */
 }
 
 .task-card:hover {
