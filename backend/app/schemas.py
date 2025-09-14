@@ -15,6 +15,7 @@ class TaskBase(BaseModel):
     color: str = Field(default="#ffeb3b", pattern=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     enabler_title: str = Field(default="", max_length=100)
     enabler_active: bool = Field(default=True)  # Всегда активен
+    is_collapsed_feature: bool = Field(default=False)  # Свернутая фича
 
 
 class TaskCreate(TaskBase):

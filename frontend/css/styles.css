@@ -474,12 +474,13 @@ body {
     padding: var(--spacing-sm);
     min-height: 80px;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    min-width: 100px; /* Минимальная ширина ячейки */
-    width: auto; /* Автоматическая ширина */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 94px); /* Автоматические колонки по ширине тикета */
+    grid-template-rows: repeat(6, auto); /* Максимум 6 рядов в одной колонке */
+    grid-auto-flow: column; /* Заполняем сначала по вертикали, потом новая колонка */
+    gap: 2px;
+    min-width: 100px;
+    width: max-content; /* Автоматическая ширина по содержимому */
     overflow: visible;
 }
 
@@ -496,8 +497,8 @@ body {
 .task-card {
     background: #ffeb3b;
     border-radius: 6px;
-    padding: 6px;
-    margin: 2px;
+    padding: 4px; /* Сократили отступы */
+    margin: 1px; /* Сократили отступы */
     font-size: 11px;
     line-height: 1.3;
     cursor: move;
@@ -505,7 +506,7 @@ body {
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     user-select: none;
-    width: 90px; /* Ужали карточку по ширине */
+    width: 92px; /* Немного расширили для больших оценок */
     min-height: 50px;
 }
 
@@ -531,17 +532,17 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px;
-    font-size: 9px;
+    font-size: 10px; /* Увеличено на 20% */
     color: rgba(0,0,0,0.6);
-    width: 80%; /* Увеличено до 80% */
+    width: 95%; /* Увеличено до 95% */
 }
 
 .estimate {
-    padding: 1px 2px;
+    padding: 2px 3px;
     background: rgba(255,255,255,0.3);
     border-radius: 2px;
     text-align: center;
-    font-size: 8px;
+    font-size: 9px; /* Увеличено */
 }
 
 .estimate:not(:empty):before {

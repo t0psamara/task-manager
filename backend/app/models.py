@@ -91,6 +91,8 @@ class Task(Base):
     # Дополнительные поля
     enabler_title = Column(String(100), default="")  # Заголовок энейблера
     enabler_active = Column(Boolean, default=True)  # Всегда активен
+    is_collapsed_feature = Column(Boolean, default=False)  # Свернутая фича в backlog
+    original_feature_tasks = Column(JSON, default=None)  # Оригинальные тикеты фичи (для восстановления)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

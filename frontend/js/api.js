@@ -304,7 +304,9 @@ window.ApiUtils = {
             position_x: parseFloat(formData.position_x) || 0,
             position_y: parseFloat(formData.position_y) || 0,
             enabler_title: formData.enabler_title || '',
-            enabler_active: true // Всегда активен
+            enabler_active: true, // Всегда активен
+            is_collapsed_feature: formData.is_collapsed_feature || false,
+            original_feature_tasks: formData.original_feature_tasks || null
         };
     },
 

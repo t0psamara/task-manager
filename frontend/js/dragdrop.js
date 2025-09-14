@@ -79,12 +79,30 @@ class DragDropManager {
      * Инициализировать drag-and-drop для фич (строк)
      */
     initializeFeatureDragDrop() {
-        const featureNames = document.querySelectorAll('.feature-name');
-        featureNames.forEach(featureName => {
-            featureName.draggable = true;
-            featureName.addEventListener('dragstart', this.handleFeatureDragStart.bind(this));
-            featureName.addEventListener('dragend', this.handleFeatureDragEnd.bind(this));
+        // Делаем всю строку фичи (feature-row) перетаскиваемой
+        const featureRows = document.querySelectorAll('.feature-row');
+        featureRows.forEach(featureRow => {
+            featureRow.draggable = true;
+            featureRow.addEventListener('dragstart', this.handleFeatureRowDragStart.bind(this));
+            featureRow.addEventListener('dragend', this.handleFeatureRowDragEnd.bind(this));
         });
+
+        // Инициализируем SortableJS для строк фич
+        const planningBoard = document.getElementById('planningBoard');
+        if (planningBoard && !planningBoard.featureSortable) {
+            planningBoard.featureSortable = new Sortable(planningBoard, {
+                group: 'features',
+                animation: 200,
+                handle: '.feature-cell', // Перетаскивание за ячейку фичи
+                ghostClass: 'feature-row-ghost',
+                chosenClass: 'feature-row-chosen',
+                dragClass: 'feature-row-drag',
+                
+                onEnd: (evt) => {
+                    this.handleFeatureReorder(evt);
+                }
+            });
+        }
 
         // Делаем backlog drop-zone для фич
         const backlogTasks = document.getElementById('backlogTasks');
@@ -141,6 +159,12 @@ class DragDropManager {
         if (backlogContainer && backlogContainer.sortableInstance) {
             backlogContainer.sortableInstance.destroy();
             delete backlogContainer.sortableInstance;
+        }
+
+        const planningBoard = document.getElementById('planningBoard');
+        if (planningBoard && planningBoard.featureSortable) {
+            planningBoard.featureSortable.destroy();
+            delete planningBoard.featureSortable;
         }
 
         this.isInitialized = false;
@@ -282,6 +306,12 @@ class DragDropManager {
                 throw new Error('Задача не найдена');
             }
 
+            // Проверяем это свернутая фича
+            if (currentTask.is_collapsed_feature && targetContainer.classList.contains('task-cell')) {
+                await this.expandCollapsedFeature(currentTask, targetContainer);
+                return;
+            }
+
             const oldPosition = {
                 feature_id: currentTask.feature_id,
                 sprint_id: currentTask.sprint_id,
@@ -324,8 +354,6 @@ class DragDropManager {
 
             // Обновляем локальное состояние
             this.updateLocalTaskData(updatedTask);
-            
-            // Убрали уведомление о перемещении
 
         } catch (error) {
             console.error('Error moving task:', error);
@@ -335,6 +363,57 @@ class DragDropManager {
             if (window.boardManager && window.boardManager.currentBoard) {
                 await window.boardManager.loadBoard(window.boardManager.currentBoard.id);
             }
+        }
+    }
+
+    /**
+     * Развернуть свернутую фичу обратно в задачи
+     */
+    async expandCollapsedFeature(collapsedTask, targetContainer) {
+        try {
+            console.log('Expanding collapsed feature:', collapsedTask);
+            
+            // Получаем target feature_id и sprint_id
+            const targetFeatureId = parseInt(targetContainer.dataset.featureId);
+            const targetSprintId = parseInt(targetContainer.dataset.sprintId);
+            
+            // Получаем оригинальные задачи из JSON
+            const originalTasks = JSON.parse(collapsedTask.original_feature_tasks || '[]');
+            
+            if (originalTasks.length === 0) {
+                throw new Error('Нет данных для восстановления фичи');
+            }
+
+            // Удаляем свернутый тикет
+            await window.api.deleteTask(collapsedTask.id);
+            
+            // Создаем все оригинальные задачи в новом месте
+            for (const originalTask of originalTasks) {
+                const taskData = {
+                    name: originalTask.name,
+                    feature_id: targetFeatureId,
+                    sprint_id: targetSprintId,
+                    estimate_ios: originalTask.estimate_ios || 0,
+                    estimate_android: originalTask.estimate_android || 0,
+                    estimate_qa: originalTask.estimate_qa || 0,
+                    estimate_sa: originalTask.estimate_sa || 0,
+                    color: originalTask.color || '#ffeb3b',
+                    enabler_title: originalTask.enabler_title || '',
+                    enabler_active: true,
+                    is_collapsed_feature: false
+                };
+                
+                await window.api.createTask(taskData);
+            }
+
+            console.log('Feature expanded successfully');
+
+            // Обновляем доску
+            await window.boardManager.loadBoard(window.boardManager.currentBoard.id);
+
+        } catch (error) {
+            console.error('Error expanding feature:', error);
+            window.ApiUtils.showApiError(error, 'восстановления фичи');
         }
     }
 
@@ -489,7 +568,7 @@ class DragDropManager {
     }
 
     /**
-     * Обработать drop фичи в backlog
+     * Обработать drop фичи в backlog (сворачивание в один тикет)
      */
     async handleFeatureDrop(e) {
         if (!this.draggedFeature) return;
@@ -499,32 +578,134 @@ class DragDropManager {
         if (!dropZone) return;
 
         try {
-            console.log('Moving feature to backlog:', this.draggedFeature);
+            console.log('Collapsing feature to backlog:', this.draggedFeature);
             
             // Получаем все задачи фичи
             const featureTasks = window.boardManager.tasks.filter(
                 task => task.feature_id === this.draggedFeature.id
             );
-
-            // Перемещаем все задачи фичи в backlog (убираем sprint_id)
-            for (const task of featureTasks) {
-                const moveData = {
-                    task_id: task.id,
-                    new_feature_id: task.feature_id,
-                    new_sprint_id: null
-                };
-                
-                await window.api.moveTask(moveData);
+            const featureBacklogTasks = window.boardManager.backlogTasks.filter(
+                task => task.feature_id === this.draggedFeature.id
+            );
+            
+            const allFeatureTasks = [...featureTasks, ...featureBacklogTasks];
+            
+            if (allFeatureTasks.length === 0) {
+                console.log('No tasks to collapse, skipping');
+                return;
             }
 
-            // Убрали уведомление о перемещении фичи
+            // Рассчитываем суммарные оценки всех тикетов фичи
+            const totalEstimates = allFeatureTasks.reduce((sum, task) => ({
+                ios: sum.ios + (task.estimate_ios || 0),
+                android: sum.android + (task.estimate_android || 0),
+                qa: sum.qa + (task.estimate_qa || 0),
+                sa: sum.sa + (task.estimate_sa || 0)
+            }), { ios: 0, android: 0, qa: 0, sa: 0 });
+
+            // Получаем название фичи
+            const feature = window.boardManager.features.find(f => f.id === this.draggedFeature.id);
+            const featureName = feature ? feature.name : 'Неизвестная фича';
+
+            // Создаем один суммарный тикет в backlog
+            const collapsedTaskData = {
+                name: `📦 ${featureName}`,
+                feature_id: this.draggedFeature.id,
+                sprint_id: null, // В backlog
+                estimate_ios: totalEstimates.ios,
+                estimate_android: totalEstimates.android,
+                estimate_qa: totalEstimates.qa,
+                estimate_sa: totalEstimates.sa,
+                color: '#9c27b0', // Фиолетовый цвет для свернутых фич
+                enabler_title: 'ФИЧА',
+                is_collapsed_feature: true,
+                original_feature_tasks: JSON.stringify(allFeatureTasks.map(t => ({...t})))
+            };
+
+            // Создаем свернутый тикет
+            const collapsedTask = await window.api.createTask(collapsedTaskData);
+            
+            // Удаляем все оригинальные тикеты
+            for (const task of allFeatureTasks) {
+                await window.api.deleteTask(task.id);
+            }
+
+            console.log('Feature collapsed successfully');
 
             // Обновляем доску
             await window.boardManager.loadBoard(window.boardManager.currentBoard.id);
 
         } catch (error) {
-            console.error('Error moving feature:', error);
-            window.ApiUtils.showApiError(error, 'перемещения фичи');
+            console.error('Error collapsing feature:', error);
+            window.ApiUtils.showApiError(error, 'сворачивания фичи');
+        }
+    }
+
+    /**
+     * Обработать начало перетаскивания строки фичи (SortableJS)
+     */
+    handleFeatureRowDragStart(e) {
+        const featureRow = e.target.closest('.feature-row');
+        if (!featureRow) return;
+
+        this.draggedFeature = {
+            id: parseInt(featureRow.dataset.featureId),
+            element: featureRow,
+            originalIndex: Array.from(featureRow.parentNode.children).indexOf(featureRow)
+        };
+
+        featureRow.classList.add('dragging-feature-row');
+        console.log('Feature row drag started:', this.draggedFeature);
+    }
+
+    /**
+     * Обработать окончание перетаскивания строки фичи
+     */
+    handleFeatureRowDragEnd(e) {
+        if (this.draggedFeature) {
+            this.draggedFeature.element.classList.remove('dragging-feature-row');
+        }
+    }
+
+    /**
+     * Обработать изменение порядка фич (SortableJS)
+     */
+    async handleFeatureReorder(evt) {
+        const featureRow = evt.item;
+        const featureId = parseInt(featureRow.dataset.featureId);
+        const newIndex = evt.newIndex;
+        const oldIndex = evt.oldIndex;
+
+        if (newIndex === oldIndex) return; // Порядок не изменился
+
+        try {
+            console.log(`Reordering feature ${featureId} from ${oldIndex} to ${newIndex}`);
+
+            // Обновляем порядок в локальных данных
+            const feature = window.boardManager.features.find(f => f.id === featureId);
+            if (feature) {
+                // Обновляем order для данной фичи
+                const newOrder = newIndex;
+                
+                // Обновляем на сервере
+                await window.api.updateFeature(featureId, { order: newOrder });
+                
+                // Обновляем локальные данные
+                feature.order = newOrder;
+                
+                // Пересортировываем все фичи
+                window.boardManager.features.sort((a, b) => a.order - b.order);
+                
+                console.log('Feature reordered successfully');
+            }
+
+        } catch (error) {
+            console.error('Error reordering feature:', error);
+            
+            // В случае ошибки возвращаем на место
+            if (window.boardManager && window.boardManager.currentBoard) {
+                await window.boardManager.loadBoard(window.boardManager.currentBoard.id);
+            }
         }
     }
 }
@@ -590,6 +771,40 @@ style.textContent = `
 
     .dragging-feature .task-cell {
         background: rgba(33, 150, 243, 0.1) !important;
+    }
+
+    /* Стили для перетаскивания строк фич */
+    .feature-row-ghost {
+        opacity: 0.4;
+    }
+
+    .feature-row-chosen {
+        cursor: grabbing !important;
+    }
+
+    .feature-row-drag {
+        transform: rotate(1deg);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+        z-index: 1000;
+    }
+
+    .dragging-feature-row {
+        opacity: 0.8;
+        transform: rotate(1deg);
+        background: rgba(33, 150, 243, 0.1) !important;
+    }
+
+    .dragging-feature-row .task-cell {
+        background: rgba(33, 150, 243, 0.05) !important;
+    }
+
+    .feature-cell {
+        cursor: grab;
+        transition: all 0.2s ease;
+    }
+
+    .feature-cell:hover {
+        background: rgba(33, 150, 243, 0.05);
     }
 `;
 

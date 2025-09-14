@@ -48,7 +48,9 @@ async def create_task(
             position_y=float(task_data.get("position_y", 0)),
             color=task_data.get("color", "#ffeb3b"),
             enabler_title=task_data.get("enabler_title", ""),
-            enabler_active=True  # Всегда активен
+            enabler_active=True,  # Всегда активен
+            is_collapsed_feature=bool(task_data.get("is_collapsed_feature", False)),
+            original_feature_tasks=task_data.get("original_feature_tasks")
         )
         db.add(db_task)
         await db.flush()
@@ -68,6 +70,8 @@ async def create_task(
             "color": db_task.color,
             "enabler_title": db_task.enabler_title or "",
             "enabler_active": True,  # Всегда активен
+            "is_collapsed_feature": db_task.is_collapsed_feature or False,
+            "original_feature_tasks": db_task.original_feature_tasks,
             "created_at": db_task.created_at.isoformat(),
             "updated_at": db_task.updated_at.isoformat() if db_task.updated_at else None
         }
@@ -116,6 +120,8 @@ async def get_tasks(
             "color": task.color,
             "enabler_title": task.enabler_title or "",
             "enabler_active": True,  # Всегда активен
+            "is_collapsed_feature": task.is_collapsed_feature or False,
+            "original_feature_tasks": task.original_feature_tasks,
             "created_at": task.created_at.isoformat(),
             "updated_at": task.updated_at.isoformat() if task.updated_at else None
         }

@@ -236,7 +236,8 @@ class BoardManager {
         
         // Синхронизируем количество колонок с количеством спринтов
         const sprintCount = this.sprints.length;
-        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, max-content))`; // max-content для автоширины
+        const sprintWidths = this.calculateSprintWidths();
+        const gridColumns = `300px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
         this.sprintHeaders.style.gridTemplateColumns = gridColumns;
         
         this.sprints.forEach(sprint => {
@@ -339,14 +340,43 @@ class BoardManager {
     }
 
     /**
+     * Рассчитать ширину столбцов спринтов на основе количества тикетов
+     */
+    calculateSprintWidths() {
+        const baseWidth = 200; // Минимальная ширина столбца
+        const taskWidth = 94; // Ширина одного тикета
+        
+        return this.sprints.map(sprint => {
+            let maxTasksInCell = 0;
+            
+            // Находим максимальное количество тикетов в любой ячейке этого спринта
+            this.features.forEach(feature => {
+                const tasksInCell = this.tasks.filter(
+                    task => task.sprint_id === sprint.id && task.feature_id === feature.id
+                ).length;
+                
+                // Рассчитываем количество колонок тикетов (6 тикетов в колонке максимум)
+                const columns = Math.ceil(tasksInCell / 6);
+                maxTasksInCell = Math.max(maxTasksInCell, columns);
+            });
+            
+            // Рассчитываем ширину столбца
+            const calculatedWidth = baseWidth + (maxTasksInCell > 1 ? (maxTasksInCell - 1) * taskWidth : 0);
+            
+            return Math.max(calculatedWidth, baseWidth);
+        });
+    }
+
+    /**
      * Отрендерить строки с фичами
      */
     renderFeatureRows() {
         this.planningBoard.innerHTML = '';
 
-        // Синхронизируем количество колонок с заголовками спринтов
+        // Синхронизируем количество колонок с заголовками спринтов  
         const sprintCount = this.sprints.length;
-        const gridColumns = `300px repeat(${sprintCount}, minmax(200px, max-content))`; // max-content для автоширины
+        const sprintWidths = this.calculateSprintWidths();
+        const gridColumns = `300px ${sprintWidths.map(width => `${width}px`).join(' ')}`;
 
         this.features.forEach(feature => {
             const featureRow = document.createElement('div');
