@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from . import models, schemas
 from .database import engine, Base
-from .routers import boards, features, sprints, tasks, auth
+from .routers import boards, features, sprints, tasks, excel_import
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -87,6 +87,7 @@ app.include_router(boards.router, prefix="/api")
 app.include_router(features.router, prefix="/api")
 app.include_router(sprints.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
+app.include_router(excel_import.router, prefix="/api")
 
 
 # Основные endpoints
@@ -118,7 +119,8 @@ async def get_info():
             "Drag-and-drop планирование", 
             "Автоматический расчет емкости",
             "Undo/Redo функциональность",
-            "Копирование/вставка задач"
+            "Копирование/вставка задач",
+            "Импорт фич и задач из Excel файлов"
         ]
     }
 
