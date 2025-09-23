@@ -222,6 +222,48 @@ class ApiClient {
             return null;
         }
     }
+
+    /**
+     * Валидация Excel файла
+     */
+    async validateExcelFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`${this.apiUrl}/excel-import/validate`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    }
+
+    /**
+     * Импорт фич и задач из Excel файла
+     */
+    async importExcelFile(file, boardId, sprintId) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('board_id', boardId.toString());
+        formData.append('sprint_id', sprintId.toString());
+        
+        const response = await fetch(`${this.apiUrl}/excel-import/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    }
 }
 
 // Создаем глобальный экземпляр API клиента

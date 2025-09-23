@@ -205,6 +205,29 @@ class FormModalManager {
             await this.handleFeatureCreate(new FormData(featureForm));
         });
 
+        // Обработчик импорта Excel
+        const importExcelBtn = document.getElementById('importExcel');
+        const importExcelForm = document.getElementById('importExcelForm');
+        const previewBtn = document.getElementById('previewBtn');
+        
+        importExcelBtn?.addEventListener('click', () => {
+            if (!window.boardManager?.currentBoard) {
+                window.NotificationManager.show('Ошибка', 'Сначала выберите доску', 'warning');
+                return;
+            }
+            window.AppUtils.initializeImportModal();
+            window.ModalManager.show('importExcelModal');
+        });
+
+        importExcelForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await window.AppUtils.handleExcelImport(new FormData(importExcelForm));
+        });
+
+        previewBtn?.addEventListener('click', async () => {
+            await window.AppUtils.handleExcelPreview();
+        });
+
         // Обработчик редактирования спринта (убрали создание спринтов)
         const sprintEditForm = document.getElementById('sprintEditForm');
         sprintEditForm?.addEventListener('submit', async (e) => {
@@ -1005,6 +1028,176 @@ window.AppUtils = {
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    },
+
+    // ============ Методы импорта Excel ============
+    
+    /**
+     * Инициализация модального окна импорта
+     */
+    initializeImportModal() {
+        const targetSprint = document.getElementById('targetSprint');
+        const importPreview = document.getElementById('importPreview');
+        const excelFile = document.getElementById('excelFile');
+        
+        // Очищаем форму
+        if (excelFile) excelFile.value = '';
+        if (importPreview) importPreview.style.display = 'none';
+        
+        // Загружаем список спринтов
+        this.loadSprintsToSelect();
+    },
+
+    /**
+     * Загрузка спринтов в селект
+     */
+    loadSprintsToSelect() {
+        const targetSprint = document.getElementById('targetSprint');
+        if (!targetSprint || !window.boardManager?.sprints) return;
+        
+        // Очищаем селект
+        targetSprint.innerHTML = '<option value="">Выберите спринт...</option>';
+        
+        // Добавляем спринты
+        window.boardManager.sprints.forEach(sprint => {
+            const option = document.createElement('option');
+            option.value = sprint.id;
+            option.textContent = `Спринт ${sprint.number}`;
+            targetSprint.appendChild(option);
+        });
+    },
+
+    /**
+     * Предпросмотр Excel файла
+     */
+    async handleExcelPreview() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            window.NotificationManager.show('Ошибка', 'Выберите файл для предпросмотра', 'warning');
+            return;
+        }
+        
+        try {
+            const validation = await window.api.validateExcelFile(file);
+            this.showImportPreview(validation);
+        } catch (error) {
+            console.error('Preview error:', error);
+            window.NotificationManager.show('Ошибка', `Не удалось обработать файл: ${error.message}`, 'error');
+        }
+    },
+
+    /**
+     * Отображение предпросмотра импорта
+     */
+    showImportPreview(validation) {
+        const importPreview = document.getElementById('importPreview');
+        const previewContent = document.getElementById('previewContent');
+        
+        if (!importPreview || !previewContent) return;
+        
+        let html = `
+            <div class="preview-summary">
+                <strong>📄 Файл:</strong> ${validation.filename}<br>
+                <strong>📊 Найдено листов:</strong> ${validation.sheets_count}
+            </div>
+        `;
+        
+        validation.sheets.forEach(sheet => {
+            html += `
+                <div class="preview-sheet">
+                    <h5>📋 ${sheet.name}</h5>
+                    <div class="preview-stats">
+                        <div class="preview-stat">
+                            <span>🏷️ Фича:</span> ${sheet.feature_name || 'Не указана'}
+                        </div>
+                        <div class="preview-stat">
+                            <span>📝 Задач:</span> ${sheet.tasks_count}
+                        </div>
+                        <div class="preview-stat">
+                            <span>🐛 Багофикс:</span> ${sheet.has_bugfix ? 'Да' : 'Нет'}
+                        </div>
+                    </div>
+                    ${sheet.warnings && sheet.warnings.length > 0 ? 
+                        `<div class="preview-warnings">⚠️ ${sheet.warnings.join(', ')}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        previewContent.innerHTML = html;
+        importPreview.style.display = 'block';
+    },
+
+    /**
+     * Обработка импорта Excel файла
+     */
+    async handleExcelImport(formData) {
+        const file = formData.get('file');
+        const sprintId = formData.get('sprint_id');
+        
+        if (!file) {
+            window.NotificationManager.show('Ошибка', 'Выберите файл для импорта', 'warning');
+            return;
+        }
+        
+        if (!sprintId) {
+            window.NotificationManager.show('Ошибка', 'Выберите спринт для добавления задач', 'warning');
+            return;
+        }
+        
+        // Показываем прогресс
+        this.showImportProgress(true);
+        
+        try {
+            const result = await window.api.importExcelFile(
+                file, 
+                window.boardManager.currentBoard.id, 
+                parseInt(sprintId)
+            );
+            
+            // Скрываем прогресс
+            this.showImportProgress(false);
+            
+            // Показываем результат
+            window.NotificationManager.show(
+                'Успех!', 
+                `Импорт завершен: создано ${result.features_created} фич и ${result.tasks_created} задач`, 
+                'success',
+                8000
+            );
+            
+            // Закрываем модальное окно
+            window.ModalManager.hide();
+            
+            // Обновляем доску
+            await window.boardManager.loadBoard(window.boardManager.currentBoard.id);
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            this.showImportProgress(false);
+            window.NotificationManager.show('Ошибка', `Не удалось импортировать файл: ${error.message}`, 'error');
+        }
+    },
+
+    /**
+     * Показать/скрыть прогресс импорта
+     */
+    showImportProgress(show) {
+        const form = document.getElementById('importExcelForm');
+        const progress = document.getElementById('importProgress');
+        
+        if (form && progress) {
+            form.style.display = show ? 'none' : 'block';
+            progress.style.display = show ? 'block' : 'none';
+            
+            if (show) {
+                const progressFill = progress.querySelector('.progress-fill');
+                if (progressFill) {
+                    progressFill.style.width = '100%';
+                }
+            }
+        }
     },
 
     /**

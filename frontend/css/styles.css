@@ -1069,3 +1069,142 @@ body {
         margin: var(--spacing-sm);
     }
 }
+
+/* Стили для импорта Excel */
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c55e);
+    border: none;
+    color: white;
+    transition: all var(--transition-smooth);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #20a73a, #1aa752);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.file-input {
+    width: 100%;
+    padding: var(--spacing-xs);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-secondary);
+    font-family: inherit;
+    font-size: 14px;
+    transition: all var(--transition-smooth);
+    cursor: pointer;
+}
+
+.file-input:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.file-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(51, 116, 240, 0.1);
+}
+
+.help-text {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+    line-height: 1.4;
+}
+
+.import-preview {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.import-preview h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.import-progress {
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progressPulse 2s infinite;
+}
+
+@keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.preview-sheet {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.preview-sheet h5 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.preview-stats {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.preview-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.preview-warnings {
+    margin-top: var(--spacing-xs);
+    font-size: 12px;
+    color: var(--warning-color);
+}
+
+.form-select {
+    width: 100%;
+    padding: var(--spacing-xs);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: all var(--transition-smooth);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(51, 116, 240, 0.1);
+}
