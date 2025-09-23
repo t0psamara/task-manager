@@ -6,21 +6,21 @@ set -e  # Остановка при ошибке
 
 echo "🚀 Начинаем деплой Task Manager на Timeweb..."
 
-# Проверяем наличие .env.production
-if [ ! -f ".env.production" ]; then
-    echo "❌ Файл .env.production не найден!"
-    echo "Создайте файл .env.production на основе env.production.example"
+# Проверяем наличие .env
+if [ ! -f ".env" ]; then
+    echo "❌ Файл .env не найден!"
+    echo "Создайте файл .env на основе env.example"
     exit 1
 fi
 
 # Останавливаем существующие контейнеры
 echo "⏹️  Останавливаем существующие контейнеры..."
-docker-compose -f docker-compose.production.yml down
+docker-compose -f docker-compose.yml down
 
 # Обновляем код из git (если используется git)
 if [ -d ".git" ]; then
     echo "📥 Обновляем код из репозитория..."
-    git pull origin main
+    git pull origin fix-branch
 fi
 
 # Создаем директории для логов и бэкапов
@@ -31,10 +31,10 @@ mkdir -p ssl
 
 # Собираем и запускаем контейнеры
 echo "🔨 Собираем образы..."
-docker-compose -f docker-compose.production.yml build --no-cache
+docker-compose -f docker-compose.yml build --no-cache
 
 echo "🚀 Запускаем контейнеры..."
-docker-compose -f docker-compose.production.yml up -d
+docker-compose -f docker-compose.yml up -d
 
 # Ждем запуска postgres
 echo "⏳ Ждем запуска PostgreSQL..."
@@ -42,7 +42,7 @@ sleep 10
 
 # Проверяем статус контейнеров
 echo "📊 Проверяем статус контейнеров..."
-docker-compose -f docker-compose.production.yml ps
+docker-compose -f docker-compose.yml ps
 
 # Проверяем health check
 echo "🏥 Проверяем здоровье приложения..."
@@ -53,7 +53,7 @@ if curl -f http://localhost:8000/health > /dev/null 2>&1; then
     echo "✅ Backend работает корректно!"
 else
     echo "❌ Backend не отвечает!"
-    docker-compose -f docker-compose.production.yml logs backend
+    docker-compose -f docker-compose.yml logs backend
 fi
 
 # Тестируем фронтенд
@@ -61,7 +61,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
     echo "✅ Frontend работает корректно!"
 else
     echo "❌ Frontend не отвечает!"
-    docker-compose -f docker-compose.production.yml logs frontend
+    docker-compose -f docker-compose.yml logs frontend
 fi
 
 echo "🎉 Деплой завершен!"
@@ -71,6 +71,6 @@ echo "   - Backend API: http://ваш_ip_адрес:8000"
 echo "   - API документация: http://ваш_ip_адрес:8000/docs"
 
 echo "📋 Полезные команды:"
-echo "   - Просмотр логов: docker-compose -f docker-compose.production.yml logs"
-echo "   - Остановка: docker-compose -f docker-compose.production.yml down"
-echo "   - Перезапуск: docker-compose -f docker-compose.production.yml restart"
+echo "   - Просмотр логов: docker-compose -f docker-compose.yml logs"
+echo "   - Остановка: docker-compose -f docker-compose.yml down"
+echo "   - Перезапуск: docker-compose -f docker-compose.yml restart"
