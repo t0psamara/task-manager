@@ -1,0 +1,30 @@
+FROM python:3.11-alpine
+
+WORKDIR /app
+
+# Установка системных зависимостей Alpine
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    postgresql-dev \
+    linux-headers \
+    build-base \
+    libffi-dev
+
+# Копирование файлов зависимостей
+COPY requirements.txt .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Копирование кода приложения
+COPY . .
+
+# Создание пользователя без root привилегий
+RUN adduser -D -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+# Команда по умолчанию
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

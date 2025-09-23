@@ -8,9 +8,20 @@ echo "🚀 Начинаем деплой Task Manager на Timeweb..."
 
 # Проверяем наличие .env
 if [ ! -f ".env" ]; then
-    echo "❌ Файл .env не найден!"
-    echo "Создайте файл .env на основе env.example"
-    exit 1
+    echo "⚠️  Файл .env не найден!"
+    if [ -f "env.timeweb" ]; then
+        echo "📋 Создаем .env из env.timeweb..."
+        cp env.timeweb .env
+        echo "✅ Файл .env создан! Проверьте настройки перед продолжением."
+    elif [ -f "env.example" ]; then
+        echo "📋 Создаем .env из env.example..."
+        cp env.example .env
+        echo "✅ Файл .env создан! Проверьте настройки перед продолжением."
+    else
+        echo "❌ Файлы env.timeweb или env.example не найдены!"
+        echo "Создайте файл .env с настройками подключения."
+        exit 1
+    fi
 fi
 
 # Останавливаем существующие контейнеры
@@ -31,7 +42,32 @@ mkdir -p ssl
 
 # Собираем и запускаем контейнеры
 echo "🔨 Собираем образы..."
-docker-compose -f docker-compose.yml build --no-cache
+
+# Попытка сборки обычного образа
+if ! docker-compose -f docker-compose.yml build --no-cache; then
+    echo "⚠️  Ошибка сборки стандартного образа!"
+    echo "🔄 Пробуем Alpine версию..."
+    
+    # Переключаемся на Alpine Dockerfile
+    if [ -f "backend/Dockerfile.alpine" ]; then
+        mv backend/Dockerfile backend/Dockerfile.backup
+        cp backend/Dockerfile.alpine backend/Dockerfile
+        
+        echo "🔨 Собираем Alpine образ..."
+        if docker-compose -f docker-compose.yml build --no-cache; then
+            echo "✅ Alpine образ собран успешно!"
+        else
+            echo "❌ Ошибка сборки Alpine образа!"
+            # Восстанавливаем оригинальный Dockerfile
+            mv backend/Dockerfile.backup backend/Dockerfile
+            echo "🔙 Восстановлен оригинальный Dockerfile"
+            exit 1
+        fi
+    else
+        echo "❌ Alpine Dockerfile не найден!"
+        exit 1
+    fi
+fi
 
 echo "🚀 Запускаем контейнеры..."
 docker-compose -f docker-compose.yml up -d
