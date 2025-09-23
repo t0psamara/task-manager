@@ -2,14 +2,25 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Установка системных зависимостей Alpine
+# Установка системных зависимостей Alpine с retry логикой
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/v3.22/main" > /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/v3.22/community" >> /etc/apk/repositories && \
+    echo "https://mirror.yandex.ru/mirrors/alpine/v3.22/main" >> /etc/apk/repositories && \
+    echo "https://mirror.yandex.ru/mirrors/alpine/v3.22/community" >> /etc/apk/repositories && \
+    apk update --no-cache || apk update --no-cache
+
 RUN apk add --no-cache \
     gcc \
     musl-dev \
     postgresql-dev \
     linux-headers \
     build-base \
-    libffi-dev
+    libffi-dev \
+    || (echo "Retrying with different mirrors..." && \
+        echo "https://mirror.yandex.ru/mirrors/alpine/v3.22/main" > /etc/apk/repositories && \
+        echo "https://mirror.yandex.ru/mirrors/alpine/v3.22/community" >> /etc/apk/repositories && \
+        apk update --no-cache && \
+        apk add --no-cache gcc musl-dev postgresql-dev linux-headers build-base libffi-dev)
 
 # Копирование файлов зависимостей
 COPY requirements.txt .

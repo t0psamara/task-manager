@@ -1,0 +1,23 @@
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+# Копирование файлов зависимостей
+COPY requirements.txt .
+
+# Установка Python зависимостей БЕЗ компиляции (только готовые wheel пакеты)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --only-binary=all -r requirements.txt || \
+    (echo "Installing with fallback options..." && \
+     pip install --no-cache-dir --prefer-binary -r requirements.txt)
+
+# Копирование кода приложения
+COPY . .
+
+# Создание пользователя без root привилегий
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+# Команда по умолчанию
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
