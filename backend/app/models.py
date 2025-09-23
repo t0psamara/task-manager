@@ -2,6 +2,27 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Tex
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
+import uuid
+
+
+class User(Base):
+    """Модель пользователя с OAuth авторизацией"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    avatar_url = Column(Text, default="")
+    
+    # OAuth поля
+    oauth_provider = Column(String(50), nullable=False)  # "google" или "yandex"
+    oauth_id = Column(String(255), nullable=False)  # ID от провайдера
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_login = Column(DateTime(timezone=True), default=func.now())
+    
+    # Связи
+    boards = relationship("Board", back_populates="owner", cascade="all, delete-orphan")
 
 
 class Board(Base):
@@ -10,9 +31,15 @@ class Board(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
+    
+    # Авторизация и доступ
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    unique_link = Column(String(36), unique=True, index=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Связи
+    owner = relationship("User", back_populates="boards")
     sprints = relationship("Sprint", back_populates="board", cascade="all, delete-orphan")
     features = relationship("Feature", back_populates="board", cascade="all, delete-orphan")
     history = relationship("History", back_populates="board", cascade="all, delete-orphan")
@@ -114,3 +141,27 @@ class History(Base):
     
     # Связи
     board = relationship("Board", back_populates="history")
+
+
+class UserActivityLog(Base):
+    """Модель для логирования действий пользователей"""
+    __tablename__ = "user_activity_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    board_id = Column(Integer, ForeignKey("boards.id"), nullable=True)  # Может быть не связано с доской
+    
+    action = Column(String(100), nullable=False)  # Тип действия
+    entity_type = Column(String(50), nullable=True)  # board, feature, task, sprint
+    entity_id = Column(Integer, nullable=True)  # ID сущности
+    entity_name = Column(String(255), nullable=True)  # Название сущности для читаемости
+    
+    details = Column(JSON, default=None)  # Дополнительные детали действия
+    ip_address = Column(String(45), nullable=True)  # IP адрес пользователя
+    user_agent = Column(Text, nullable=True)  # User Agent браузера
+    
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Связи
+    user = relationship("User")
+    board = relationship("Board")

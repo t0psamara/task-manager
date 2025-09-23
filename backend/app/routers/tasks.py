@@ -1,17 +1,83 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from sqlalchemy.orm import selectinload
+from typing import List, Optional
 
 from .. import models, schemas
 from ..database import get_db
+from .auth import get_current_user, get_current_user_optional
+from ..services.auth import log_user_action, verify_board_access
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+
+async def verify_task_board_access(
+    task_id: int,
+    user: Optional[models.User],
+    db: AsyncSession
+) -> models.Task:
+    """Проверяет доступ к задаче через доску"""
+    result = await db.execute(
+        select(models.Task)
+        .options(
+            selectinload(models.Task.feature).selectinload(models.Feature.board)
+        )
+        .where(models.Task.id == task_id)
+    )
+    task = result.scalar_one_or_none()
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    
+    # Проверяем доступ к доске
+    board = task.feature.board
+    board_access = await verify_board_access(
+        board_id=board.id,
+        user=user,
+        db=db
+    )
+    
+    if not board_access:
+        raise HTTPException(status_code=403, detail="Доступ к доске запрещён")
+    
+    return task
+
+
+async def verify_feature_board_access(
+    feature_id: int,
+    user: Optional[models.User],
+    db: AsyncSession
+) -> models.Feature:
+    """Проверяет доступ к фиче через доску"""
+    result = await db.execute(
+        select(models.Feature)
+        .options(selectinload(models.Feature.board))
+        .where(models.Feature.id == feature_id)
+    )
+    feature = result.scalar_one_or_none()
+    
+    if not feature:
+        raise HTTPException(status_code=404, detail="Фича не найдена")
+    
+    # Проверяем доступ к доске
+    board_access = await verify_board_access(
+        board_id=feature.board.id,
+        user=user,
+        db=db
+    )
+    
+    if not board_access:
+        raise HTTPException(status_code=403, detail="Доступ к доске запрещён")
+    
+    return feature
 
 
 @router.post("/")
 async def create_task(
     task_data: dict,
+    request: Request,
+    current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Создание новой задачи"""
@@ -20,12 +86,8 @@ async def create_task(
         if not feature_id:
             raise HTTPException(status_code=400, detail="feature_id обязателен")
             
-        # Проверяем существование фичи
-        result = await db.execute(
-            select(models.Feature).where(models.Feature.id == feature_id)
-        )
-        if not result.scalar_one_or_none():
-            raise HTTPException(status_code=404, detail="Фича не найдена")
+        # Проверяем доступ к фиче через доску
+        feature = await verify_feature_board_access(feature_id, current_user, db)
         
         # Проверяем существование спринта если указан
         sprint_id = task_data.get("sprint_id")
@@ -53,8 +115,30 @@ async def create_task(
             original_feature_tasks=task_data.get("original_feature_tasks")
         )
         db.add(db_task)
-        await db.flush()
+        await db.commit()
         await db.refresh(db_task)
+        
+        # Логируем создание задачи
+        await log_user_action(
+            db=db,
+            user=current_user,
+            action="create_task",
+            entity_type="task",
+            entity_id=db_task.id,
+            entity_name=db_task.name,
+            board_id=feature.board.id,
+            details={
+                "estimates": {
+                    "ios": db_task.estimate_ios,
+                    "android": db_task.estimate_android,
+                    "qa": db_task.estimate_qa,
+                    "sa": db_task.estimate_sa
+                },
+                "sprint_id": db_task.sprint_id,
+                "feature_name": feature.name
+            },
+            request=request
+        )
         
         return {
             "id": db_task.id,
@@ -86,12 +170,26 @@ async def get_tasks(
     feature_id: int = None, 
     sprint_id: int = None,
     board_id: int = None,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """Получение задач с фильтрацией"""
+    
+    # Если указан board_id, проверяем доступ к доске
+    if board_id:
+        board_access = await verify_board_access(
+            board_id=board_id,
+            user=current_user,
+            db=db
+        )
+        if not board_access:
+            raise HTTPException(status_code=403, detail="Доступ к доске запрещён")
+    
     query = select(models.Task)
     
     if feature_id:
+        # Проверяем доступ к фиче
+        await verify_feature_board_access(feature_id, current_user, db)
         query = query.where(models.Task.feature_id == feature_id)
     
     if sprint_id:
@@ -129,9 +227,16 @@ async def get_tasks(
     ]
 
 
-@router.get("/{task_id}", response_model=schemas.Task)
-async def get_task(task_id: int, db: AsyncSession = Depends(get_db)):
+@router.get("/{task_id}")
+async def get_task(
+    task_id: int,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
     """Получение задачи по ID"""
+    # Проверяем доступ к задаче через доску
+    task = await verify_task_board_access(task_id, current_user, db)
+    
     result = await db.execute(
         select(models.Task).where(models.Task.id == task_id)
     )

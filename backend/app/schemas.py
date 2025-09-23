@@ -138,6 +138,28 @@ class Sprint(SprintBase):
     model_config = {"from_attributes": True}
 
 
+# Схемы для User
+class UserBase(BaseModel):
+    email: str = Field(..., max_length=255)
+    name: str = Field(..., max_length=255)
+    avatar_url: str = Field(default="")
+
+
+class UserCreate(UserBase):
+    oauth_provider: str = Field(..., max_length=50)
+    oauth_id: str = Field(..., max_length=255)
+
+
+class User(UserBase):
+    id: int
+    oauth_provider: str
+    oauth_id: str
+    created_at: datetime
+    last_login: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
 # Базовые схемы для Board
 class BoardBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -153,9 +175,12 @@ class BoardUpdate(BaseModel):
 
 class Board(BoardBase):
     id: int
+    owner_id: int
+    unique_link: str
     created_at: datetime
     features: List[Feature] = []
     sprints: List[Sprint] = []
+    owner: Optional[User] = None
 
     model_config = {"from_attributes": True}
 

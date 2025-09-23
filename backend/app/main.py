@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from . import models, schemas
 from .database import engine, Base
-from .routers import boards, features, sprints, tasks
+from .routers import boards, features, sprints, tasks, auth
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -82,6 +82,7 @@ app.add_middleware(
 )
 
 # Подключение роутеров
+app.include_router(auth.router, prefix="/api")
 app.include_router(boards.router, prefix="/api")
 app.include_router(features.router, prefix="/api")
 app.include_router(sprints.router, prefix="/api")
