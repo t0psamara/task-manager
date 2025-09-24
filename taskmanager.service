@@ -1,0 +1,22 @@
+[Unit]
+Description=Task Manager FastAPI Application
+After=network.target
+
+[Service]
+Type=exec
+User=root
+Group=root
+WorkingDirectory=/root/task-manager/backend
+Environment="PATH=/root/task-manager/venv/bin"
+EnvironmentFile=/root/task-manager/.env
+ExecStart=/root/task-manager/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=taskmanager
+
+[Install]
+WantedBy=multi-user.target
