@@ -2,7 +2,14 @@
  * API клиент для взаимодействия с backend
  */
 class ApiClient {
-    constructor(baseUrl = 'http://localhost:8000') {
+    constructor(baseUrl = null) {
+        // Автоматически определяем базовый URL на основе текущего хоста
+        if (!baseUrl) {
+            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+            const host = window.location.hostname;
+            const port = '8000'; // Порт API сервера
+            baseUrl = `${protocol}//${host}:${port}`;
+        }
         this.baseUrl = baseUrl;
         this.apiUrl = `${baseUrl}/api`;
     }
@@ -279,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             apiStatus.className = isHealthy ? 'status-indicator online' : 'status-indicator offline';
             
             if (!isHealthy) {
-                console.warn('API сервер недоступен. Убедитесь что backend запущен на http://localhost:8000');
+                console.warn('API сервер недоступен. Убедитесь что backend запущен на порту 8000');
             }
         } catch (error) {
             apiStatus.innerHTML = 'API: 🔴';

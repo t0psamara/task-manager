@@ -2,7 +2,14 @@
  * WebSocket клиент для real-time обновлений
  */
 class WebSocketClient {
-    constructor(baseUrl = 'ws://localhost:8000') {
+    constructor(baseUrl = null) {
+        // Автоматически определяем базовый URL на основе текущего хоста
+        if (!baseUrl) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = '8000'; // Порт API сервера
+            baseUrl = `${protocol}//${host}:${port}`;
+        }
         this.baseUrl = baseUrl;
         this.socket = null;
         this.boardId = null;
