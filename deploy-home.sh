@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Простой скрипт деплоя на сервер timeweb
+# Альтернативный скрипт деплоя в домашнюю директорию пользователя
 # IP: 194.87.118.34
 
 SERVER_IP="194.87.118.34"
 SERVER_USER="root"  # или ваш пользователь
-PROJECT_PATH="/var/www/task-manager"
+PROJECT_PATH="~/task-manager"  # Деплой в домашнюю директорию
 
-echo "🚀 Деплой Task Manager на сервер $SERVER_IP"
+echo "🚀 Деплой Task Manager на сервер $SERVER_IP (в домашнюю директорию)"
 
 # Цвета для вывода
 RED='\033[0;31m'
@@ -35,7 +35,7 @@ if [ ! -f "backend/app/main.py" ]; then
 fi
 
 # Создаем директорию на сервере если её нет
-log_info "Создание директории проекта на сервере..."
+log_info "Создание директории проекта в домашней папке пользователя..."
 ssh ${SERVER_USER}@${SERVER_IP} "mkdir -p ${PROJECT_PATH}"
 
 if [ $? -ne 0 ]; then
@@ -58,7 +58,7 @@ fi
 log_info "Настройка на сервере..."
 ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
     set -e
-    cd /var/www/task-manager
+    cd ~/task-manager
     
     echo "🐍 Установка Python и зависимостей..."
     
@@ -94,7 +94,7 @@ ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
     nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > ../server.log 2>&1 &
     
     echo "✅ Сервер запущен на порту 8000"
-    echo "📁 Логи: /var/www/task-manager/server.log"
+    echo "📁 Логи: ~/task-manager/server.log"
     echo "🌐 Доступен по адресу: http://194.87.118.34:8000"
     
     # Проверяем что сервер запустился
@@ -108,10 +108,13 @@ EOF
 
 if [ $? -eq 0 ]; then
     log_info "✅ Деплой завершен успешно!"
-    log_info "🌐 Frontend: http://${SERVER_IP}/frontend/"
+    log_info "🌐 Frontend: http://${SERVER_IP}:8080 (см. инструкции ниже)"
     log_info "🔧 API: http://${SERVER_IP}:8000"
     log_info "📊 API Info: http://${SERVER_IP}:8000/info"
     log_info "💓 Health: http://${SERVER_IP}:8000/health"
+    echo ""
+    log_warn "Для запуска frontend выполните на сервере:"
+    echo "ssh ${SERVER_USER}@${SERVER_IP} 'cd ~/task-manager/frontend && python3 -m http.server 8080 --bind 0.0.0.0'"
     echo ""
     log_warn "Для остановки сервера выполните на сервере:"
     echo "ssh ${SERVER_USER}@${SERVER_IP} 'pkill -f \"uvicorn.*main:app\"'"

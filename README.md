@@ -1,186 +1,162 @@
-# Task Manager - Интерактивная доска планирования
+# 📋 Task Manager - Интерактивная доска планирования
 
-Система для планирования задач с поддержкой drag-and-drop, real-time синхронизации и расчета емкости по командам.
+Веб-приложение для планирования задач по спринтам с поддержкой drag-and-drop, real-time обновлений и импорта из Excel.
 
-## 🚀 Функциональность
+## 🚀 Быстрый старт
 
-- ✅ Интерактивная доска с фичами и спринтами
-- ✅ Drag-and-drop стикеров между ячейками  
-- ✅ Автоматический расчет емкости по командам (iOS, Android, QA, SA)
-- ✅ Real-time обновления через WebSocket
-- ✅ Цветовая индикация загруженности спринтов
-- ⏳ Undo/Redo функциональность (планируется)
-- ⏳ Экспорт данных (планируется)
+### Локальный запуск
 
-## 🏗️ Архитектура
+```bash
+# Запуск API сервера
+./start-server.sh
+
+# В другом терминале - запуск frontend
+./start-frontend.sh
+```
+
+Приложение будет доступно:
+- Frontend: http://localhost:8080
+- API: http://localhost:8000
+
+### Деплой на сервер
+
+```bash
+# Вариант 1: В /var/www/ (требует root)
+./deploy.sh
+
+# Вариант 2: В домашнюю директорию (безопаснее)  
+./deploy-home.sh
+
+# Запуск frontend на сервере
+./start-frontend-server.sh
+```
+
+Подробные инструкции в [DEPLOY.md](DEPLOY.md)
+
+## ✨ Возможности
+
+- 📊 **Визуальное планирование** - drag-and-drop задач между спринтами
+- 👥 **Многопользовательский режим** - real-time обновления через WebSocket
+- 📈 **Контроль емкости** - автоматический расчет загрузки команд
+- 📁 **Импорт из Excel** - загрузка фич и задач из файлов
+- 🔄 **Undo/Redo** - отмена и повтор действий
+- 📋 **Копирование задач** - Ctrl+C / Ctrl+V
+- 🎨 **Цветовые метки** - визуальное выделение задач
+- 🏷️ **Энейблеры** - маркировка блокеров и рисков
+
+## 🛠 Технологии
 
 **Backend:**
-- FastAPI (Python) - REST API + WebSocket
-- PostgreSQL - база данных
-- SQLAlchemy ORM - для работы с БД
-- Pydantic - валидация данных
+- FastAPI - современный Python веб-фреймворк
+- SQLAlchemy - ORM для работы с базой данных
+- SQLite - легковесная база данных
+- WebSocket - real-time обновления
+- asyncio - асинхронное программирование
 
-**Frontend:** (в разработке)
-- Vanilla JS + HTML/CSS
-- SortableJS для drag-and-drop
-- WebSocket клиент
+**Frontend:**
+- Vanilla JavaScript - без фреймворков
+- CSS Grid/Flexbox - адаптивная верстка
+- SortableJS - drag-and-drop функциональность
+- WebSocket API - real-time соединение
+- HTML5 - семантическая разметка
 
-## 📦 Установка и запуск
+## 📁 Структура проекта
 
-### Через Docker (рекомендуется)
+```
+task-manager/
+├── backend/
+│   ├── app/
+│   │   ├── main.py          # Главный файл приложения
+│   │   ├── database.py      # Настройки БД
+│   │   ├── models.py        # Модели данных
+│   │   ├── schemas.py       # Pydantic схемы
+│   │   ├── routers/         # API роутеры
+│   │   └── services/        # Бизнес-логика
+│   ├── requirements.txt     # Python зависимости
+│   └── venv/               # Виртуальное окружение
+├── frontend/
+│   ├── index.html          # Главная страница
+│   ├── css/styles.css      # Стили приложения
+│   └── js/                 # JavaScript модули
+├── deploy.sh               # Автоматический деплой
+├── deploy-home.sh          # Деплой в домашнюю директорию
+├── start-server.sh         # Локальный запуск API
+├── start-frontend.sh       # Локальный запуск frontend
+├── start-frontend-server.sh # Запуск frontend на сервере
+└── DEPLOY.md              # Инструкции по деплою
+```
+
+## 🎯 Основные сущности
+
+- **Доска** - рабочее пространство проекта
+- **Спринт** - временной период с настраиваемой емкостью команд
+- **Фича** - функциональная область или эпик
+- **Задача** - отдельная работа с оценками по командам
+- **Backlog** - неназначенные задачи
+
+## 🔧 Настройка
+
+### Переменные окружения
+
+Создайте файл `backend/.env`:
 
 ```bash
-# Клонировать репозиторий
-git clone <repository-url>
-cd task-manager
-
-# Создать .env файл
-cp backend/.env.example backend/.env
-# Отредактировать переменные окружения при необходимости
-
-# Запустить через Docker Compose
-docker-compose up
+DEBUG=true                    # Режим отладки (SQLite)
+DATABASE_URL=postgresql://... # PostgreSQL (для продакшена)
 ```
 
-### Локально
+### База данных
 
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # На Windows: venv\\Scripts\\activate
-pip install -r requirements.txt
+- **Разработка**: SQLite файл `task_manager_debug.db`
+- **Продакшен**: PostgreSQL (настраивается через DATABASE_URL)
 
-# Создать .env файл с переменными:
-echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/task_manager" > .env
+Таблицы создаются автоматически при запуске.
 
-# Запустить PostgreSQL (например, через Docker)
-docker run -d --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15
+## 📊 API Endpoints
 
-# Запустить сервер
-uvicorn app.main:app --reload
-```
+- `GET /` - Информация о приложении
+- `GET /health` - Проверка здоровья
+- `GET /info` - Детальная информация о конфигурации
+- `GET /api/boards/` - Список досок
+- `GET /api/features/` - Фичи доски
+- `GET /api/sprints/` - Спринты доски  
+- `GET /api/tasks/` - Задачи
+- `POST /api/tasks/move` - Перемещение задач
+- `WebSocket /ws/{board_id}` - Real-time обновления
 
-## 🔗 API Endpoints
+Полная документация доступна по адресу `/docs` после запуска сервера.
 
-API доступно по адресу: `http://localhost:8000`
+## 💡 Использование
 
-### Основные эндпоинты:
+1. **Создайте доску** для вашего проекта
+2. **Добавьте фичи** - основные функциональные области
+3. **Настройте спринты** с емкостью команд (iOS, Android, QA, SA)
+4. **Создавайте задачи** с оценками по командам
+5. **Перетаскивайте задачи** между спринтами и в backlog
+6. **Отслеживайте загрузку** команд в реальном времени
 
-**Доски:**
-- `GET /api/boards/` - получить все доски
-- `POST /api/boards/` - создать доску
-- `GET /api/boards/{id}` - получить доску с данными
+## 🤝 Команды разработки
 
-**Фичи:**
-- `GET /api/features/?board_id=1` - получить фичи доски
-- `POST /api/features/` - создать фичу
+- **iOS команда** - разработка под iPhone/iPad
+- **Android команда** - разработка под Android
+- **QA команда** - тестирование качества
+- **SA команда** - системная аналитика
 
-**Спринты:**
-- `GET /api/sprints/?board_id=1` - получить спринты доски  
-- `POST /api/sprints/` - создать спринт
-- `GET /api/sprints/{id}/capacity` - получить информацию о емкости
+Каждая задача может иметь оценки для разных команд в Story Points.
 
-**Задачи:**
-- `GET /api/tasks/?board_id=1` - получить задачи
-- `POST /api/tasks/` - создать задачу
-- `PUT /api/tasks/{id}` - обновить задачу
-- `POST /api/tasks/move` - переместить задачу
+## 📄 Лицензия
 
-**WebSocket:**
-- `ws://localhost:8000/ws/{board_id}` - real-time обновления
+MIT License - используйте свободно для коммерческих и некоммерческих проектов.
 
-### Документация API
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+## 🐛 Поддержка
 
-## 🗄️ Структура базы данных
+При возникновении проблем:
 
-```sql
-boards (id, name, created_at)
-├── features (id, board_id, name, order)
-│   └── tasks (id, feature_id, sprint_id, name, estimates, position, color)
-├── sprints (id, board_id, number, capacity_ios, capacity_android, capacity_qa, capacity_sa)  
-└── history (id, board_id, action_type, data, timestamp)
-```
+1. Проверьте логи сервера: `tail -f backend/server.log`
+2. Убедитесь что порты 8000 и 8080 свободны
+3. Проверьте статус API: http://localhost:8000/health
+4. Перезапустите приложение: `./start-server.sh`
 
-## 📋 Примеры использования
+---
 
-### Создание доски:
-```bash
-curl -X POST "http://localhost:8000/api/boards/" \\
-  -H "Content-Type: application/json" \\
-  -d '{"name": "Моя доска планирования"}'
-```
-
-### Создание спринта:
-```bash  
-curl -X POST "http://localhost:8000/api/sprints/" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "board_id": 1,
-    "number": 1,
-    "capacity_ios": 10.0,
-    "capacity_android": 8.0,
-    "capacity_qa": 5.0,
-    "capacity_sa": 3.0
-  }'
-```
-
-### Создание фичи:
-```bash
-curl -X POST "http://localhost:8000/api/features/" \\
-  -H "Content-Type: application/json" \\
-  -d '{"board_id": 1, "name": "Авторизация пользователей", "order": 1}'
-```
-
-### Создание задачи:
-```bash
-curl -X POST "http://localhost:8000/api/tasks/" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "Реализовать логин",
-    "feature_id": 1,
-    "sprint_id": 1,
-    "estimate_ios": 2.0,
-    "estimate_android": 3.0,
-    "estimate_qa": 1.0,
-    "color": "#ffeb3b"
-  }'
-```
-
-## 🎯 Следующие этапы
-
-1. **Frontend разработка** - создание интерактивного UI
-2. **WebSocket интеграция** - real-time обновления  
-3. **Drag-and-drop** - перемещение стикеров
-4. **Undo/Redo** - история изменений
-5. **Экспорт данных** - выгрузка в различных форматах
-
-## 🔧 Разработка
-
-```bash
-# Запуск тестов
-cd backend
-pytest
-
-# Форматирование кода
-black app/
-isort app/
-
-# Проверка типов
-mypy app/
-```
-
-## 📝 Модель данных
-
-Каждая **задача** содержит оценки по командам:
-- `estimate_ios` - оценка для iOS разработки
-- `estimate_android` - оценка для Android разработки  
-- `estimate_qa` - оценка для QA тестирования
-- `estimate_sa` - оценка для системного анализа
-
-**Спринт** имеет емкость по каждой команде, система автоматически:
-- ✅ Рассчитывает использованную емкость
-- ✅ Показывает доступную емкость  
-- ✅ Индикацию перегрузки (красный/зеленый)
+Создано с ❤️ для эффективного планирования проектов
