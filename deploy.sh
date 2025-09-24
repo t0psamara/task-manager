@@ -63,7 +63,10 @@ ssh ${SERVER_USER}@${SERVER_IP} << 'EOF'
     echo "🐍 Установка Python и зависимостей..."
     
     # Устанавливаем Python3 и pip если нет
-    which python3 || (apt update && apt install -y python3 python3-pip python3-venv)
+    which python3 || (apt update && apt install -y python3 python3-pip)
+    
+    # Устанавливаем python3-venv отдельно для Ubuntu/Debian
+    apt update && apt install -y python3-venv
     
     # Создаем виртуальное окружение
     if [ ! -d "backend/venv" ]; then

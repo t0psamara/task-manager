@@ -104,6 +104,24 @@ rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 ```
 
+## Решение проблем
+
+### Ошибка "ensurepip is not available" на Ubuntu
+
+Если при деплое возникает ошибка с созданием виртуального окружения:
+
+```bash
+# Быстрое исправление
+./fix-server.sh
+```
+
+Или вручную на сервере:
+```bash
+apt update && apt install -y python3-venv
+rm -rf backend/venv  # Удаляем поврежденное окружение
+# Затем повторите деплой
+```
+
 ## Управление сервером
 
 ### Остановка сервера
